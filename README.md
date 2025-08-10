@@ -4,7 +4,7 @@
 
 Focus for 25 minutes, break for 5, and repeat—no settings, no distractions. One tap to start, clear countdown display, gentle chimes at each switch. Stay in your flow and let the timer handle the rest.
 
-![PomodoroFlow Demo](https://via.placeholder.com/600x400/667eea/ffffff?text=PomodoroFlow+Timer)
+![PomodoroFlow Demo](/home/ubuntu/screenshots/file_home_ubuntu_152852.png)
 
 ## ✨ Features
 
@@ -158,4 +158,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Stay focused. Stay productive. Stay in your flow.** 🍅✨  
+**Stay focused. Stay productive. Stay in your flow.** 🍅✨      
