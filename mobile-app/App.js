@@ -1,3 +1,4 @@
+// mobile-app/App.js
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet, Switch, AppState } from "react-native";
 import { Audio } from "expo-av";
@@ -24,7 +25,7 @@ export default function App() {
   const [running, setRunning] = useState(false);
   const [fast, setFast] = useState(true);           // dev fast mode ON
   const [phaseEndAt, setPhaseEndAt] = useState(null); // epoch ms
-  const [notificationId, setNotificationId] = useState(null); // current scheduled notification
+  const [notificationId, setNotificationId] = useState(null);
   const tickRef = useRef(null);
   const appState = useRef(AppState.currentState);
 
@@ -33,18 +34,15 @@ export default function App() {
 
   const durations = useMemo(() => (fast ? DUR_DEV : DUR), [fast]);
 
+  // Load saved state & ask notification permission
   useEffect(() => {
     const loadState = async () => {
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
         if (stored) {
-          const { phase: storedPhase, phaseStartAt, phaseEndAt: storedEndAt } = JSON.parse(stored);
+          const { phase: storedPhase, phaseEndAt: storedEndAt } = JSON.parse(stored);
           const now = Date.now();
-<<<<<<< HEAD
-          
-=======
 
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
           if (storedEndAt && now < storedEndAt) {
             setPhase(storedPhase);
             setPhaseEndAt(storedEndAt);
@@ -53,11 +51,7 @@ export default function App() {
             const elapsed = now - storedEndAt;
             const phaseDuration = storedPhase === "focus" ? durations.break : durations.focus;
             const newPhase = storedPhase === "focus" ? "break" : "focus";
-<<<<<<< HEAD
-            
-=======
 
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
             if (elapsed < phaseDuration * 1000) {
               setPhase(newPhase);
               setPhaseEndAt(storedEndAt + phaseDuration * 1000);
@@ -76,14 +70,7 @@ export default function App() {
 
     const requestNotificationPermissions = async () => {
       const { status } = await Notifications.requestPermissionsAsync();
-<<<<<<< HEAD
-      if (status !== 'granted') {
-        console.warn('Notification permissions not granted');
-=======
-      if (status !== "granted") {
-        console.warn("Notification permissions not granted");
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
-      }
+      if (status !== "granted") console.warn("Notification permissions not granted");
     };
 
     loadState();
@@ -95,118 +82,71 @@ export default function App() {
     (async () => {
       try {
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-        const { sound } = await Audio.Sound.createAsync(
-          require("./assets/chime.mp3")
-        );
+        const { sound } = await Audio.Sound.createAsync(require("./assets/chime.mp3"));
         soundRef.current = sound;
       } catch (e) {
         console.warn("Chime not loaded. Add assets/chime.mp3", e?.message);
       }
     })();
-    return () => {
-      soundRef.current?.unloadAsync();
-    };
+    return () => soundRef.current?.unloadAsync();
   }, []);
 
+  // handle app foreground to force re-render
   useEffect(() => {
-    const handleAppStateChange = (nextAppState) => {
-<<<<<<< HEAD
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        if (phaseEndAt) {
-          setPhaseEndAt(prev => prev);
-=======
-      if (appState.current.match(/inactive|background/) && nextAppState === "active") {
-        if (phaseEndAt) {
-          setPhaseEndAt((prev) => prev); // force a re-render to recalc remaining
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
-        }
+    const handleAppStateChange = (next) => {
+      if (appState.current.match(/inactive|background/) && next === "active") {
+        if (phaseEndAt) setPhaseEndAt((p) => p);
       }
-      appState.current = nextAppState;
+      appState.current = next;
     };
-
-<<<<<<< HEAD
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-=======
-    const subscription = AppState.addEventListener("change", handleAppStateChange);
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
-    return () => subscription?.remove();
+    const sub = AppState.addEventListener("change", handleAppStateChange);
+    return () => sub?.remove();
   }, [phaseEndAt]);
 
   const playChime = async () => {
-    try {
-      const s = soundRef.current;
-      if (!s) return;
-      await s.replayAsync();
-    } catch {}
+    try { await soundRef.current?.replayAsync(); } catch {}
   };
 
   const triggerHaptic = async () => {
-    try {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch {}
+    try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
   };
 
-  const saveState = async (newPhase, newPhaseEndAt) => {
+  const saveState = async (newPhase, newEnd) => {
     try {
-      const state = {
-        phase: newPhase,
-        phaseStartAt: Date.now(),
-        phaseEndAt: newPhaseEndAt,
-      };
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-      console.warn("Failed to save state:", e);
-    }
+      await AsyncStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ phase: newPhase, phaseStartAt: Date.now(), phaseEndAt: newEnd })
+      );
+    } catch (e) { console.warn("Failed to save state:", e); }
   };
 
   const clearState = async () => {
-    try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
-    } catch (e) {
-      console.warn("Failed to clear state:", e);
-    }
+    try { await AsyncStorage.removeItem(STORAGE_KEY); } catch (e) {}
   };
 
   const cancelNotification = async () => {
     if (notificationId) {
-      try {
-        await Notifications.cancelScheduledNotificationAsync(notificationId);
-        setNotificationId(null);
-      } catch (e) {
-        console.warn("Failed to cancel notification:", e);
-      }
+      try { await Notifications.cancelScheduledNotificationAsync(notificationId); } catch {}
+      setNotificationId(null);
     }
   };
 
   const scheduleNotification = async (endTime, nextPhase) => {
     try {
-      await cancelNotification(); // Cancel any existing notification
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
-      const trigger = new Date(endTime);
+      await cancelNotification();
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: nextPhase === "focus" ? "Break time!" : "Focus time!",
           body: nextPhase === "focus" ? "Time for a break" : "Time to focus",
           sound: true,
         },
-        trigger,
+        trigger: new Date(endTime),
       });
-<<<<<<< HEAD
-      
-=======
-
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
       setNotificationId(id);
-    } catch (e) {
-      console.warn("Failed to schedule notification:", e);
-    }
+    } catch (e) { console.warn("Failed to schedule notification:", e); }
   };
 
-  // compute remaining seconds from timestamps (survives background)
+  // compute remaining seconds from timestamps
   const remaining = Math.max(0, phaseEndAt ? Math.floor((phaseEndAt - Date.now()) / 1000) : 0);
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
@@ -215,19 +155,11 @@ export default function App() {
   const startPhase = async (next) => {
     const seconds = next === "focus" ? durations.focus : durations.break;
     const endTime = Date.now() + seconds * 1000;
-<<<<<<< HEAD
-    
-    setPhase(next);
-    setPhaseEndAt(endTime);
-    setRunning(true);
-    
-=======
 
     setPhase(next);
     setPhaseEndAt(endTime);
     setRunning(true);
 
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
     await saveState(next, endTime);
     const nextPhase = next === "focus" ? "break" : "focus";
     await scheduleNotification(endTime, nextPhase);
@@ -244,8 +176,7 @@ export default function App() {
         await triggerHaptic();
         await startPhase(phase === "focus" ? "break" : "focus");
       } else {
-        // trigger re-render cheaply
-        setPhaseEndAt((x) => x);
+        setPhaseEndAt((x) => x); // re-render
       }
     }, 200);
     return () => clearInterval(tickRef.current);
@@ -253,53 +184,21 @@ export default function App() {
 
   // controls
   const onStart = () => startPhase("focus");
-<<<<<<< HEAD
-  
-=======
-
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
-  const onPause = async () => {
-    setRunning(false);
-    await cancelNotification();
-  };
-<<<<<<< HEAD
-  
-=======
-
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
+  const onPause = async () => { setRunning(false); await cancelNotification(); };
   const onResume = async () => {
     if (!phaseEndAt) return;
     const remain = Math.max(0, phaseEndAt - Date.now());
-    const newEndTime = Date.now() + remain;
-<<<<<<< HEAD
-    
-    setPhaseEndAt(newEndTime);
+    const newEnd = Date.now() + remain;
+    setPhaseEndAt(newEnd);
     setRunning(true);
-    
-=======
-
-    setPhaseEndAt(newEndTime);
-    setRunning(true);
-
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
-    await saveState(phase, newEndTime);
+    await saveState(phase, newEnd);
     const nextPhase = phase === "focus" ? "break" : "focus";
-    await scheduleNotification(newEndTime, nextPhase);
+    await scheduleNotification(newEnd, nextPhase);
   };
-<<<<<<< HEAD
-  
-=======
-
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
   const onStop = async () => {
     setRunning(false);
     setPhase("focus");
     setPhaseEndAt(null);
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
     await cancelNotification();
     await clearState();
   };
