@@ -1,22 +1,81 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Switch } from "react-native";
+import { View, Text, Pressable, StyleSheet, Switch, AppState } from "react-native";
 import { Audio } from "expo-av";
+import * as Notifications from "expo-notifications";
+import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Real vs dev durations
 const DUR = { focus: 25 * 60, break: 5 * 60 };
 const DUR_DEV = { focus: 25, break: 5 }; // fast mode for QA
+
+const STORAGE_KEY = "pomodoroflow_state";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function App() {
   const [phase, setPhase] = useState("focus");      // "focus" | "break"
   const [running, setRunning] = useState(false);
   const [fast, setFast] = useState(true);           // dev fast mode ON
   const [phaseEndAt, setPhaseEndAt] = useState(null); // epoch ms
+  const [notificationId, setNotificationId] = useState(null); // current scheduled notification
   const tickRef = useRef(null);
+  const appState = useRef(AppState.currentState);
 
   // audio
   const soundRef = useRef(null);
 
   const durations = useMemo(() => (fast ? DUR_DEV : DUR), [fast]);
+
+  useEffect(() => {
+    const loadState = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const { phase: storedPhase, phaseStartAt, phaseEndAt: storedEndAt } = JSON.parse(stored);
+          const now = Date.now();
+          
+          if (storedEndAt && now < storedEndAt) {
+            setPhase(storedPhase);
+            setPhaseEndAt(storedEndAt);
+            setRunning(true);
+          } else if (storedEndAt && now >= storedEndAt) {
+            const elapsed = now - storedEndAt;
+            const phaseDuration = storedPhase === "focus" ? durations.break : durations.focus;
+            const newPhase = storedPhase === "focus" ? "break" : "focus";
+            
+            if (elapsed < phaseDuration * 1000) {
+              setPhase(newPhase);
+              setPhaseEndAt(storedEndAt + phaseDuration * 1000);
+              setRunning(true);
+            } else {
+              setPhase("focus");
+              setPhaseEndAt(null);
+              setRunning(false);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to load state:", e);
+      }
+    };
+
+    const requestNotificationPermissions = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        console.warn('Notification permissions not granted');
+      }
+    };
+
+    loadState();
+    requestNotificationPermissions();
+  }, [durations]);
 
   // prepare audio (play in iOS silent mode)
   useEffect(() => {
@@ -36,12 +95,84 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        if (phaseEndAt) {
+          setPhaseEndAt(prev => prev);
+        }
+      }
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [phaseEndAt]);
+
   const playChime = async () => {
     try {
       const s = soundRef.current;
       if (!s) return;
       await s.replayAsync();
     } catch {}
+  };
+
+  const triggerHaptic = async () => {
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {}
+  };
+
+  const saveState = async (newPhase, newPhaseEndAt) => {
+    try {
+      const state = {
+        phase: newPhase,
+        phaseStartAt: Date.now(),
+        phaseEndAt: newPhaseEndAt,
+      };
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.warn("Failed to save state:", e);
+    }
+  };
+
+  const clearState = async () => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      console.warn("Failed to clear state:", e);
+    }
+  };
+
+  const cancelNotification = async () => {
+    if (notificationId) {
+      try {
+        await Notifications.cancelScheduledNotificationAsync(notificationId);
+        setNotificationId(null);
+      } catch (e) {
+        console.warn("Failed to cancel notification:", e);
+      }
+    }
+  };
+
+  const scheduleNotification = async (endTime, nextPhase) => {
+    try {
+      await cancelNotification(); // Cancel any existing notification
+      
+      const trigger = new Date(endTime);
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: nextPhase === "focus" ? "Break time!" : "Focus time!",
+          body: nextPhase === "focus" ? "Time for a break" : "Time to focus",
+          sound: true,
+        },
+        trigger,
+      });
+      
+      setNotificationId(id);
+    } catch (e) {
+      console.warn("Failed to schedule notification:", e);
+    }
   };
 
   // compute remaining seconds from timestamps (survives background)
@@ -53,22 +184,29 @@ export default function App() {
   const ss = String(remaining % 60).padStart(2, "0");
 
   // start the given phase
-  const startPhase = (next) => {
+  const startPhase = async (next) => {
     const seconds = next === "focus" ? durations.focus : durations.break;
+    const endTime = Date.now() + seconds * 1000;
+    
     setPhase(next);
-    setPhaseEndAt(Date.now() + seconds * 1000);
+    setPhaseEndAt(endTime);
     setRunning(true);
+    
+    await saveState(next, endTime);
+    const nextPhase = next === "focus" ? "break" : "focus";
+    await scheduleNotification(endTime, nextPhase);
   };
 
   // ticking & auto-flip phase
   useEffect(() => {
     if (!running) return;
     clearInterval(tickRef.current);
-    tickRef.current = setInterval(() => {
+    tickRef.current = setInterval(async () => {
       if (!phaseEndAt) return;
       if (Date.now() >= phaseEndAt) {
-        playChime(); // ding at transition
-        startPhase(phase === "focus" ? "break" : "focus");
+        await playChime();
+        await triggerHaptic();
+        await startPhase(phase === "focus" ? "break" : "focus");
       } else {
         // trigger re-render cheaply
         setPhaseEndAt((x) => x);
@@ -79,17 +217,32 @@ export default function App() {
 
   // controls
   const onStart = () => startPhase("focus");
-  const onPause = () => setRunning(false);
-  const onResume = () => {
+  
+  const onPause = async () => {
+    setRunning(false);
+    await cancelNotification();
+  };
+  
+  const onResume = async () => {
     if (!phaseEndAt) return;
     const remain = Math.max(0, phaseEndAt - Date.now());
-    setPhaseEndAt(Date.now() + remain);
+    const newEndTime = Date.now() + remain;
+    
+    setPhaseEndAt(newEndTime);
     setRunning(true);
+    
+    await saveState(phase, newEndTime);
+    const nextPhase = phase === "focus" ? "break" : "focus";
+    await scheduleNotification(newEndTime, nextPhase);
   };
-  const onStop = () => {
+  
+  const onStop = async () => {
     setRunning(false);
     setPhase("focus");
     setPhaseEndAt(null);
+    
+    await cancelNotification();
+    await clearState();
   };
 
   const primaryLabel =
@@ -144,4 +297,3 @@ const styles = StyleSheet.create({
   devLabel: { color: "rgba(255,255,255,0.8)", marginRight: 8 },
   tagline: { position: "absolute", bottom: 28, color: "rgba(255,255,255,0.5)" },
 });
-
