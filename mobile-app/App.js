@@ -40,7 +40,11 @@ export default function App() {
         if (stored) {
           const { phase: storedPhase, phaseStartAt, phaseEndAt: storedEndAt } = JSON.parse(stored);
           const now = Date.now();
+<<<<<<< HEAD
           
+=======
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
           if (storedEndAt && now < storedEndAt) {
             setPhase(storedPhase);
             setPhaseEndAt(storedEndAt);
@@ -49,7 +53,11 @@ export default function App() {
             const elapsed = now - storedEndAt;
             const phaseDuration = storedPhase === "focus" ? durations.break : durations.focus;
             const newPhase = storedPhase === "focus" ? "break" : "focus";
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
             if (elapsed < phaseDuration * 1000) {
               setPhase(newPhase);
               setPhaseEndAt(storedEndAt + phaseDuration * 1000);
@@ -68,8 +76,13 @@ export default function App() {
 
     const requestNotificationPermissions = async () => {
       const { status } = await Notifications.requestPermissionsAsync();
+<<<<<<< HEAD
       if (status !== 'granted') {
         console.warn('Notification permissions not granted');
+=======
+      if (status !== "granted") {
+        console.warn("Notification permissions not granted");
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
       }
     };
 
@@ -97,15 +110,25 @@ export default function App() {
 
   useEffect(() => {
     const handleAppStateChange = (nextAppState) => {
+<<<<<<< HEAD
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         if (phaseEndAt) {
           setPhaseEndAt(prev => prev);
+=======
+      if (appState.current.match(/inactive|background/) && nextAppState === "active") {
+        if (phaseEndAt) {
+          setPhaseEndAt((prev) => prev); // force a re-render to recalc remaining
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
         }
       }
       appState.current = nextAppState;
     };
 
+<<<<<<< HEAD
     const subscription = AppState.addEventListener('change', handleAppStateChange);
+=======
+    const subscription = AppState.addEventListener("change", handleAppStateChange);
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
     return () => subscription?.remove();
   }, [phaseEndAt]);
 
@@ -158,7 +181,11 @@ export default function App() {
   const scheduleNotification = async (endTime, nextPhase) => {
     try {
       await cancelNotification(); // Cancel any existing notification
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
       const trigger = new Date(endTime);
       const id = await Notifications.scheduleNotificationAsync({
         content: {
@@ -168,7 +195,11 @@ export default function App() {
         },
         trigger,
       });
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
       setNotificationId(id);
     } catch (e) {
       console.warn("Failed to schedule notification:", e);
@@ -176,10 +207,7 @@ export default function App() {
   };
 
   // compute remaining seconds from timestamps (survives background)
-  const remaining = Math.max(
-    0,
-    phaseEndAt ? Math.floor((phaseEndAt - Date.now()) / 1000) : 0
-  );
+  const remaining = Math.max(0, phaseEndAt ? Math.floor((phaseEndAt - Date.now()) / 1000) : 0);
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
 
@@ -187,11 +215,19 @@ export default function App() {
   const startPhase = async (next) => {
     const seconds = next === "focus" ? durations.focus : durations.break;
     const endTime = Date.now() + seconds * 1000;
+<<<<<<< HEAD
     
     setPhase(next);
     setPhaseEndAt(endTime);
     setRunning(true);
     
+=======
+
+    setPhase(next);
+    setPhaseEndAt(endTime);
+    setRunning(true);
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
     await saveState(next, endTime);
     const nextPhase = next === "focus" ? "break" : "focus";
     await scheduleNotification(endTime, nextPhase);
@@ -217,36 +253,58 @@ export default function App() {
 
   // controls
   const onStart = () => startPhase("focus");
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
   const onPause = async () => {
     setRunning(false);
     await cancelNotification();
   };
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
   const onResume = async () => {
     if (!phaseEndAt) return;
     const remain = Math.max(0, phaseEndAt - Date.now());
     const newEndTime = Date.now() + remain;
+<<<<<<< HEAD
     
     setPhaseEndAt(newEndTime);
     setRunning(true);
     
+=======
+
+    setPhaseEndAt(newEndTime);
+    setRunning(true);
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
     await saveState(phase, newEndTime);
     const nextPhase = phase === "focus" ? "break" : "focus";
     await scheduleNotification(newEndTime, nextPhase);
   };
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
   const onStop = async () => {
     setRunning(false);
     setPhase("focus");
     setPhaseEndAt(null);
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 63c1540 (merge: keep monolithic App.js + add persistence/notifications/haptics)
     await cancelNotification();
     await clearState();
   };
 
-  const primaryLabel =
-    !running && !phaseEndAt ? "Start" : running ? "Pause" : "Resume";
+  const primaryLabel = !running && !phaseEndAt ? "Start" : running ? "Pause" : "Resume";
   const onPrimary = () => {
     if (!running && !phaseEndAt) return onStart();
     if (running) return onPause();
@@ -254,16 +312,9 @@ export default function App() {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        phase === "focus" ? styles.focusBg : styles.breakBg,
-      ]}
-    >
+    <View style={[styles.container, phase === "focus" ? styles.focusBg : styles.breakBg]}>
       <Text style={styles.phase}>{phase === "focus" ? "FOCUS" : "BREAK"}</Text>
-      <Text style={styles.time}>
-        {mm}:{ss}
-      </Text>
+      <Text style={styles.time}>{mm}:{ss}</Text>
 
       <Pressable style={styles.primaryBtn} onPress={onPrimary}>
         <Text style={styles.primaryText}>{primaryLabel}</Text>
