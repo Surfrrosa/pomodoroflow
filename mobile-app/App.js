@@ -77,21 +77,28 @@ export default function App() {
     requestNotificationPermissions();
   }, [durations]);
 
-  // prepare audio (play in iOS silent mode)
+  // prepare audio (play in iOS silent mode) - safer loading approach
   useEffect(() => {
-    (async () => {
+    const loadAudio = async () => {
       try {
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
         const { sound } = await Audio.Sound.createAsync(
-          require("./assets/chime.mp3")
+          require("./assets/chime.mp3"),
+          { shouldPlay: false }
         );
         soundRef.current = sound;
       } catch (e) {
-        console.warn("Chime not loaded. Add assets/chime.mp3", e?.message);
+        console.warn("Chime not loaded, continuing without audio:", e?.message);
+        soundRef.current = null;
       }
-    })();
+    };
+    
+    loadAudio();
+    
     return () => {
-      soundRef.current?.unloadAsync();
+      if (soundRef.current) {
+        soundRef.current.unloadAsync().catch(() => {});
+      }
     };
   }, []);
 
@@ -114,7 +121,9 @@ export default function App() {
       const s = soundRef.current;
       if (!s) return;
       await s.replayAsync();
-    } catch {}
+    } catch (e) {
+      console.warn("Failed to play chime:", e?.message);
+    }
   };
 
   const triggerHaptic = async () => {
