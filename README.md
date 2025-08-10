@@ -43,35 +43,47 @@ Focus for 25 minutes, break for 5, and repeat—no settings, no distractions. On
 
 🌐 **[Try PomodoroFlow Web App](https://surfrrosa.github.io/pomodoroflow)** *(Coming Soon)*
 
-## 📱 Mobile App (In Development)
+## 📱 Mobile App (Expo)
 
-We're building a native mobile app using **Expo (React Native)** for the ultimate Pomodoro experience:
+Native iOS and Android app with local notifications and background timer support.
 
-### Planned Features
-- **📲 Native Mobile Experience**: True iOS and Android apps
-- **🔔 Push Notifications**: Reliable alerts even when app is backgrounded
-- **⚡ Background Timer**: Continues running when you switch apps
-- **📳 Haptic Feedback**: Gentle vibrations for session transitions
-- **🏪 App Store Distribution**: Available on iOS App Store and Google Play
+### Quick Start
 
-### Development Roadmap
+```bash
+cd mobile-app
+npm install
+npm start
+```
 
-**Phase 1: MVP** *(In Progress)*
-- Core 25/5 minute timer functionality
-- Start/Pause/Stop controls
-- Local notifications for session transitions
-- Development testing via Expo Go
+This starts the Expo development server with LAN mode enabled. Scan the QR code with Expo Go app on your device.
 
-**Phase 2: Polish** *(Planned)*
-- App icon and splash screen
-- Settings for sound/vibration preferences
-- Background color themes
-- Multi-device testing
+### Testing Notes
 
-**Phase 3: Store Release** *(Future)*
-- App Store and Google Play submission
-- Marketing website
-- Public release
+- **Dev Fast Mode**: Toggle enabled by default (25s focus / 5s break) for quick testing
+- **Real Mode**: Toggle off for full duration (25min focus / 5min break)
+- **Background Testing**: Start timer, background app, verify notifications fire correctly
+- **Persistence Testing**: Kill app during timer, reopen to verify time/phase restoration
+
+### Build for Production
+
+```bash
+# iOS build
+npm run build:ios
+
+# Android build  
+npm run build:android
+```
+
+Requires EAS CLI setup and Expo account. See [EAS Build documentation](https://docs.expo.dev/build/introduction/).
+
+### QA Checklist
+
+See [QA_CHECKLIST.md](QA_CHECKLIST.md) for comprehensive testing checklist covering:
+- Core timer loop (25/5 indefinite)
+- Background notifications (foreground, background, locked)
+- Pause/Resume/Stop notification handling
+- State persistence across app lifecycle
+- Dev Fast Mode functionality
 
 ## 🛠️ Technical Details
 
@@ -82,13 +94,14 @@ We're building a native mobile app using **Expo (React Native)** for the ultimat
 - **Styling**: CSS gradients with responsive design
 - **Dependencies**: Zero external dependencies
 
-### Mobile App Stack *(Planned)*
+### Mobile App Stack
 - **Framework**: Expo (React Native)
-- **Language**: JavaScript/TypeScript
-- **Notifications**: Expo Notifications API
+- **Language**: JavaScript
+- **Notifications**: Expo Notifications API with local scheduling
 - **Audio**: Expo AV for native sound playback
-- **Background Tasks**: Expo TaskManager
-- **Testing**: Expo Go for rapid development
+- **Haptics**: Expo Haptics for tactile feedback
+- **Persistence**: AsyncStorage for state management
+- **Testing**: Jest with React Native Testing Library
 
 ## 🎨 Design Philosophy
 
@@ -110,10 +123,11 @@ We're building a native mobile app using **Expo (React Native)** for the ultimat
 # Web app - no build process needed
 open index.html
 
-# Mobile app (when available)
+# Mobile app
 cd mobile-app
 npm install
-expo start
+npm start  # Starts with LAN mode
+npm test   # Run unit tests
 ```
 
 ### Project Structure
@@ -158,4 +172,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Stay focused. Stay productive. Stay in your flow.** 🍅✨      
+**Stay focused. Stay productive. Stay in your flow.** 🍅✨          
