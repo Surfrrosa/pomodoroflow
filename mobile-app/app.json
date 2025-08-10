@@ -1,7 +1,12 @@
 {
   "expo": {
+<<<<<<< HEAD
     "name": "mobile-app",
     "slug": "mobile-app",
+=======
+    "name": "PomodoroFlow",
+    "slug": "pomodoroflow",
+>>>>>>> origin/main
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,17 +18,47 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+<<<<<<< HEAD
       "supportsTablet": true
+=======
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": ["background-processing"],
+        "NSUserNotificationsUsageDescription": "This app uses notifications to alert you when Pomodoro sessions end."
+      }
+>>>>>>> origin/main
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+<<<<<<< HEAD
       "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     }
+=======
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ffffff"
+        }
+      ]
+    ]
+>>>>>>> origin/main
   }
 }
