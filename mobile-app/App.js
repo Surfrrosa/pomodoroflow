@@ -5,6 +5,8 @@ import { Audio } from "expo-av";
 import * as Notifications from "expo-notifications";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
+import ConfettiOverlay from "./components/ConfettiOverlay";
 
 // Real vs dev durations
 const DUR = { focus: 25 * 60, break: 5 * 60 };
@@ -23,9 +25,10 @@ Notifications.setNotificationHandler({
 export default function App() {
   const [phase, setPhase] = useState("focus");      // "focus" | "break"
   const [running, setRunning] = useState(false);
-  const [fast, setFast] = useState(true);           // dev fast mode ON
+  const [fast, setFast] = useState(Constants.executionEnvironment === 'storeClient' ? false : true);
   const [phaseEndAt, setPhaseEndAt] = useState(null); // epoch ms
   const [notificationId, setNotificationId] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
   const tickRef = useRef(null);
   const appState = useRef(AppState.currentState);
 
@@ -42,7 +45,6 @@ export default function App() {
         if (stored) {
           const { phase: storedPhase, phaseEndAt: storedEndAt } = JSON.parse(stored);
           const now = Date.now();
-
           if (storedEndAt && now < storedEndAt) {
             setPhase(storedPhase);
             setPhaseEndAt(storedEndAt);
@@ -51,7 +53,6 @@ export default function App() {
             const elapsed = now - storedEndAt;
             const phaseDuration = storedPhase === "focus" ? durations.break : durations.focus;
             const newPhase = storedPhase === "focus" ? "break" : "focus";
-
             if (elapsed < phaseDuration * 1000) {
               setPhase(newPhase);
               setPhaseEndAt(storedEndAt + phaseDuration * 1000);
@@ -70,7 +71,9 @@ export default function App() {
 
     const requestNotificationPermissions = async () => {
       const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") console.warn("Notification permissions not granted");
+      if (status !== "granted") {
+        console.warn("Notification permissions not granted");
+      }
     };
 
     loadState();
@@ -93,14 +96,17 @@ export default function App() {
 
   // handle app foreground to force re-render
   useEffect(() => {
-    const handleAppStateChange = (next) => {
-      if (appState.current.match(/inactive|background/) && next === "active") {
-        if (phaseEndAt) setPhaseEndAt((p) => p);
+    const handleAppStateChange = (nextAppState) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === "active") {
+        if (phaseEndAt) {
+          setPhaseEndAt((prev) => prev); // force a re-render to recalc remaining
+        }
       }
-      appState.current = next;
+      appState.current = nextAppState;
     };
-    const sub = AppState.addEventListener("change", handleAppStateChange);
-    return () => sub?.remove();
+
+    const subscription = AppState.addEventListener("change", handleAppStateChange);
+    return () => subscription?.remove();
   }, [phaseEndAt]);
 
   const playChime = async () => {
@@ -133,14 +139,16 @@ export default function App() {
 
   const scheduleNotification = async (endTime, nextPhase) => {
     try {
-      await cancelNotification();
+      await cancelNotification(); // Cancel any existing notification
+
+      const trigger = new Date(endTime);
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: nextPhase === "focus" ? "Break time!" : "Focus time!",
           body: nextPhase === "focus" ? "Time for a break" : "Time to focus",
           sound: true,
         },
-        trigger: new Date(endTime),
+        trigger,
       });
       setNotificationId(id);
     } catch (e) { console.warn("Failed to schedule notification:", e); }
@@ -159,7 +167,6 @@ export default function App() {
     setPhase(next);
     setPhaseEndAt(endTime);
     setRunning(true);
-
     await saveState(next, endTime);
     const nextPhase = next === "focus" ? "break" : "focus";
     await scheduleNotification(endTime, nextPhase);
@@ -172,11 +179,13 @@ export default function App() {
     tickRef.current = setInterval(async () => {
       if (!phaseEndAt) return;
       if (Date.now() >= phaseEndAt) {
+        setShowConfetti(true);
         await playChime();
         await triggerHaptic();
         await startPhase(phase === "focus" ? "break" : "focus");
       } else {
-        setPhaseEndAt((x) => x); // re-render
+        // trigger re-render cheaply
+        setPhaseEndAt((x) => x);
       }
     }, 200);
     return () => clearInterval(tickRef.current);
@@ -184,16 +193,22 @@ export default function App() {
 
   // controls
   const onStart = () => startPhase("focus");
-  const onPause = async () => { setRunning(false); await cancelNotification(); };
+
+  const onPause = async () => {
+    setRunning(false);
+    await cancelNotification();
+  };
   const onResume = async () => {
     if (!phaseEndAt) return;
     const remain = Math.max(0, phaseEndAt - Date.now());
-    const newEnd = Date.now() + remain;
-    setPhaseEndAt(newEnd);
+    const newEndTime = Date.now() + remain;
+
+    setPhaseEndAt(newEndTime);
     setRunning(true);
-    await saveState(phase, newEnd);
+
+    await saveState(phase, newEndTime);
     const nextPhase = phase === "focus" ? "break" : "focus";
-    await scheduleNotification(newEnd, nextPhase);
+    await scheduleNotification(newEndTime, nextPhase);
   };
   const onStop = async () => {
     setRunning(false);
@@ -229,6 +244,11 @@ export default function App() {
       </View>
 
       <Text style={styles.tagline}>Radical simplicity — 25/5 on loop.</Text>
+      
+      <ConfettiOverlay 
+        visible={showConfetti} 
+        onComplete={() => setShowConfetti(false)} 
+      />
     </View>
   );
 }
