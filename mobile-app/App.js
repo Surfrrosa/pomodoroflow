@@ -29,8 +29,8 @@ export default function App() {
   const [phaseEndAt, setPhaseEndAt] = useState(null); // epoch ms
   const [notificationId, setNotificationId] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [remaining, setRemaining] = useState(0); // remaining seconds in current phase
   const endAtRef = useRef(null);      // NEW: read inside interval
-  const [tick, setTick] = useState(0); // NEW: forces re-render
   const tickRef = useRef(null);
   const appState = useRef(AppState.currentState);
 
@@ -101,7 +101,8 @@ export default function App() {
     const handleAppStateChange = (nextAppState) => {
       if (appState.current.match(/inactive|background/) && nextAppState === "active") {
         if (phaseEndAt) {
-          setTick(t => (t + 1) % 100000); // force a re-render to recalc remaining
+          const newRemaining = Math.max(0, Math.floor((phaseEndAt - Date.now()) / 1000));
+          setRemaining(newRemaining);
         }
       }
       appState.current = nextAppState;
@@ -147,21 +148,18 @@ export default function App() {
     try {
       await cancelNotification(); // Cancel any existing notification
 
-      const trigger = new Date(endTime);
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: nextPhase === "focus" ? "Break time!" : "Focus time!",
           body: nextPhase === "focus" ? "Time for a break" : "Time to focus",
           sound: true,
         },
-        trigger,
+        trigger: { type: 'date', date: new Date(endTime) },
       });
       setNotificationId(id);
     } catch (e) { console.warn("Failed to schedule notification:", e); }
   };
 
-  // compute remaining seconds from timestamps
-  const remaining = Math.max(0, phaseEndAt ? Math.floor((phaseEndAt - Date.now()) / 1000) : 0);
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
 
@@ -172,6 +170,7 @@ export default function App() {
 
     setPhase(next);
     setPhaseEndAt(endTime);
+    setRemaining(seconds);
     setRunning(true);
     await saveState(next, endTime);
     const nextPhase = next === "focus" ? "break" : "focus";
@@ -192,7 +191,8 @@ export default function App() {
         await triggerHaptic();
         await startPhase(phase === "focus" ? "break" : "focus");
       } else {
-        setTick(t => (t + 1) % 100000);
+        const newRemaining = Math.max(0, Math.floor((end - Date.now()) / 1000));
+        setRemaining(newRemaining);
       }
     }, 250);
     tickRef.current = id;
@@ -208,10 +208,12 @@ export default function App() {
   };
   const onResume = async () => {
     if (!phaseEndAt) return;
-    const remain = Math.max(0, phaseEndAt - Date.now());
-    const newEndTime = Date.now() + remain;
+    const remainingMs = Math.max(0, phaseEndAt - Date.now());
+    const remainingSecs = Math.floor(remainingMs / 1000);
+    const newEndTime = Date.now() + remainingMs;
 
     setPhaseEndAt(newEndTime);
+    setRemaining(remainingSecs);
     setRunning(true);
 
     await saveState(phase, newEndTime);
@@ -222,6 +224,7 @@ export default function App() {
     setRunning(false);
     setPhase("focus");
     setPhaseEndAt(null);
+    setRemaining(0);
     await cancelNotification();
     await clearState();
   };
