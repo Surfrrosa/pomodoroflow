@@ -57,6 +57,29 @@ npm start
 
 This starts the Expo development server with LAN mode enabled. Scan the QR code with Expo Go app on your device.
 
+### Development Configuration
+
+#### Notification Control
+
+You can disable notifications during development by setting the `NOTIFS_ENABLED` environment variable:
+
+```bash
+# Disable notifications for debugging
+export NOTIFS_ENABLED=false
+expo start
+
+# Re-enable notifications (default)
+export NOTIFS_ENABLED=true
+expo start
+```
+
+#### Notification Behavior
+
+- **Startup Cleanup**: The app performs "nuclear" cleanup on mount, clearing all scheduled notifications and dismissing any displayed notifications
+- **Android Channels**: A single stable notification channel is configured for Android builds
+- **Deduplication**: Duplicate notification scheduling is prevented using internal deduplication guards
+- **Testing**: Use Expo Go for basic testing, but use a Dev Client build for full notification behavior on Android
+
 ### Testing Notes
 
 - **Dev Fast Mode**: Toggle enabled by default (25s focus / 5s break) for quick testing
@@ -172,4 +195,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Stay focused. Stay productive. Stay in your flow.** 🍅✨          
+**Stay focused. Stay productive. Stay in your flow.** 🍅✨                    

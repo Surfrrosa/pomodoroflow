@@ -1,11 +1,13 @@
 // mobile-app/App.js
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Switch, AppState } from "react-native";
+import { View, Text, Pressable, StyleSheet, Switch, AppState, Platform } from "react-native";
 import { Audio } from "expo-av";
 import * as Notifications from "expo-notifications";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
+
+const NOTIFS_ENABLED = process.env.NOTIFS_ENABLED !== 'false';
 
 // Real vs dev durations
 const DUR = { focus: 25 * 60, break: 5 * 60 };
@@ -31,10 +33,37 @@ export default function App() {
 
   const endAtRef = useRef(null);           // read by interval without re-rendering
   const notificationIdRef = useRef(null);  // currently scheduled local notif id
+  const lastScheduleKeyRef = useRef(null); // prevent duplicate scheduling
   const appState = useRef(AppState.currentState);
   const soundRef = useRef(null);
 
   useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        console.log('[NOTIF] Starting app cleanup...');
+        await Notifications.cancelAllScheduledNotificationsAsync();
+        await Notifications.dismissAllNotificationsAsync();
+        const remaining = await Notifications.getAllScheduledNotificationsAsync();
+        console.log('[NOTIF] Scheduled after cleanup:', remaining);
+
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'Default',
+            importance: Notifications.AndroidImportance.DEFAULT,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FFFFFF',
+          });
+          console.log('[NOTIF] Android channel configured');
+        }
+
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== "granted") console.warn("Notification permissions not granted");
+        console.log('[NOTIF] Permissions status:', status);
+      } catch (e) {
+        console.warn("Failed to initialize notifications:", e);
+      }
+    };
+
     const loadState = async () => {
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
@@ -69,15 +98,8 @@ export default function App() {
       }
     };
 
-    const requestNotificationPermissions = async () => {
-      try {
-        const { status } = await Notifications.requestPermissionsAsync();
-        if (status !== "granted") console.warn("Notification permissions not granted");
-      } catch {}
-    };
-
+    initializeApp();
     loadState();
-    requestNotificationPermissions();
   }, [durations]);
 
   useEffect(() => {
@@ -91,6 +113,24 @@ export default function App() {
       }
     })();
     return () => soundRef.current?.unloadAsync();
+  }, []);
+
+  useEffect(() => {
+    console.log('[NOTIF] Registering notification listeners');
+    
+    const receivedSubscription = Notifications.addNotificationReceivedListener(notification => {
+      console.log('[NOTIF] Notification received:', notification);
+    });
+
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('[NOTIF] Notification response:', response);
+    });
+
+    return () => {
+      console.log('[NOTIF] Cleaning up notification listeners');
+      receivedSubscription.remove();
+      responseSubscription.remove();
+    };
   }, []);
 
   useEffect(() => { endAtRef.current = phaseEndAt; }, [phaseEndAt]);
@@ -107,27 +147,52 @@ export default function App() {
   }, [phaseEndAt]);
 
   const cancelNotification = async () => {
+    if (!NOTIFS_ENABLED) return;
+    
     if (notificationIdRef.current) {
-      try { await Notifications.cancelScheduledNotificationAsync(notificationIdRef.current); } catch {}
+      try { 
+        await Notifications.cancelScheduledNotificationAsync(notificationIdRef.current);
+        console.log('[NOTIF] Cancelled notification:', notificationIdRef.current);
+      } catch (e) {
+        console.warn('[NOTIF] Failed to cancel notification:', e);
+      }
       notificationIdRef.current = null;
     }
   };
 
-  const schedulePhaseNotification = async (endTime, nextPhase) => {
-    await cancelNotification(); // prevent stacking
-    try {
-      const id = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: nextPhase === "focus" ? "Break time!" : "Focus time!",
-        body:  nextPhase === "focus" ? "Time for a break" : "Time to focus",
-          sound: true,
-        },
-        trigger: { type: "date", date: new Date(endTime) },
-      });
-      notificationIdRef.current = id;
-    } catch (e) {
-      console.warn("Failed to schedule notification:", e?.message);
+  const scheduleOnce = async ({ title, body, endTime, label }) => {
+    if (!NOTIFS_ENABLED) return null;
+    
+    const key = `${label}-${new Date(endTime).getTime()}`;
+    
+    if (lastScheduleKeyRef.current === key) {
+      console.log('[NOTIF] Skipping duplicate schedule:', key);
+      return null;
     }
+    
+    await cancelNotification(); // prevent stacking
+    
+    try {
+      console.log('[NOTIF] Scheduling notification:', { key, endTime, title });
+      const id = await Notifications.scheduleNotificationAsync({
+        content: { title, body, sound: true },
+        trigger: { type: 'date', date: new Date(endTime) },
+      });
+      
+      notificationIdRef.current = id;
+      lastScheduleKeyRef.current = key;
+      console.log('[NOTIF] Notification scheduled successfully:', id);
+      return id;
+    } catch (e) {
+      console.warn('[NOTIF] Failed to schedule notification:', e);
+      return null;
+    }
+  };
+
+  const schedulePhaseNotification = async (endTime, nextPhase) => {
+    const title = nextPhase === "focus" ? "Break time!" : "Focus time!";
+    const body = nextPhase === "focus" ? "Time for a break" : "Time to focus";
+    return scheduleOnce({ title, body, endTime, label: nextPhase });
   };
 
   const saveState = async (p, end) => {
