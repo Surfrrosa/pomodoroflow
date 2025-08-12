@@ -120,7 +120,7 @@ class PomodoroTimerService {
                     body: this.isBreak ? 'Time for a break' : 'Time to focus',
                     sound: true,
                 },
-                trigger: null, // Show immediately
+                trigger: { type: 'date', date: new Date() }, // Show immediately with new format
             });
         } catch (error) {
             console.log('Notification error:', error);

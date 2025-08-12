@@ -7,7 +7,7 @@ import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 
-const NOTIFS_ENABLED = false; // TEMP while we debug
+const NOTIFS_ENABLED = true; // Re-enabled after fixing trigger formats
 
 // Real vs dev durations
 const DUR = { focus: 25 * 60, break: 5 * 60 };
@@ -33,6 +33,7 @@ export default function App() {
 
   const endAtRef = useRef(null);           // read by interval without re-rendering
   const notificationIdRef = useRef(null);  // currently scheduled local notif id
+  const lastScheduleKeyRef = useRef(null); // prevent duplicate scheduling
   const appState = useRef(AppState.currentState);
   const soundRef = useRef(null);
 
@@ -122,6 +123,13 @@ export default function App() {
 
   const schedulePhaseNotification = async (endTime, nextPhase) => {
     if (!NOTIFS_ENABLED) return;
+    
+    const scheduleKey = `${nextPhase}-${endTime}`;
+    if (lastScheduleKeyRef.current === scheduleKey) {
+      console.log('Skipping duplicate notification schedule:', scheduleKey);
+      return;
+    }
+    
     await cancelNotification(); // prevent stacking
     try {
       const id = await Notifications.scheduleNotificationAsync({
@@ -133,6 +141,8 @@ export default function App() {
         trigger: { type: "date", date: new Date(endTime) },
       });
       notificationIdRef.current = id;
+      lastScheduleKeyRef.current = scheduleKey;
+      console.log('Notification scheduled successfully:', { nextPhase, endTime, id });
     } catch (e) {
       console.warn("Failed to schedule notification:", e?.message);
     }

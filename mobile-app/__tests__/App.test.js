@@ -46,7 +46,7 @@ describe('PomodoroFlow App', () => {
         body: 'Time for a break',
         sound: true,
       },
-      trigger: expect.any(Date),
+      trigger: { type: 'date', date: expect.any(Date) },
     });
   });
 
