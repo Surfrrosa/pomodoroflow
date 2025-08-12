@@ -4,6 +4,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import App from '../App';
 
+jest.mock('expo-notifications', () => ({
+  scheduleNotificationAsync: jest.fn(() => Promise.resolve('notification-id')),
+  presentNotificationAsync: jest.fn(),
+  cancelScheduledNotificationAsync: jest.fn(),
+  cancelAllScheduledNotificationsAsync: jest.fn(),
+  dismissAllNotificationsAsync: jest.fn(),
+  getAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve([])),
+  requestPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  setNotificationChannelAsync: jest.fn(),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  setNotificationHandler: jest.fn(),
+}));
+
 const mockDateNow = jest.spyOn(Date, 'now');
 
 describe('PomodoroFlow App', () => {
@@ -46,7 +60,7 @@ describe('PomodoroFlow App', () => {
         body: 'Time for a break',
         sound: true,
       },
-      trigger: expect.any(Date),
+      trigger: { type: 'date', date: expect.any(Date) },
     });
   });
 
@@ -167,5 +181,31 @@ describe('PomodoroFlow App', () => {
     await waitFor(() => {
       expect(getByText('25:00')).toBeTruthy(); // Full duration
     });
+  });
+
+  test('prevents duplicate notification scheduling', async () => {
+    const { getByText } = render(<App />);
+    
+    await act(async () => {
+      fireEvent.press(getByText('Start'));
+    });
+
+    await act(async () => {
+      fireEvent.press(getByText('Pause'));
+    });
+
+    await act(async () => {
+      fireEvent.press(getByText('Resume'));
+    });
+
+    await act(async () => {
+      fireEvent.press(getByText('Pause'));
+    });
+
+    await act(async () => {
+      fireEvent.press(getByText('Resume'));
+    });
+
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledTimes(3); // Start + 2 resumes
   });
 });

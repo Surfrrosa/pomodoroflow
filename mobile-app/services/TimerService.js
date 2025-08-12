@@ -114,13 +114,10 @@ class PomodoroTimerService {
         try {
             const Notifications = require('expo-notifications');
             
-            await Notifications.scheduleNotificationAsync({
-                content: {
-                    title: this.isBreak ? 'Break Time!' : 'Focus Time!',
-                    body: this.isBreak ? 'Time for a break' : 'Time to focus',
-                    sound: true,
-                },
-                trigger: null, // Show immediately
+            await Notifications.presentNotificationAsync({
+                title: this.isBreak ? 'Break Time!' : 'Focus Time!',
+                body: this.isBreak ? 'Time for a break' : 'Time to focus',
+                sound: true,
             });
         } catch (error) {
             console.log('Notification error:', error);
