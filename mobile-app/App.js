@@ -29,6 +29,8 @@ export default function App() {
   const [phaseEndAt, setPhaseEndAt] = useState(null); // epoch ms
   const [notificationId, setNotificationId] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const endAtRef = useRef(null);      // NEW: read inside interval
+  const [tick, setTick] = useState(0); // NEW: forces re-render
   const tickRef = useRef(null);
   const appState = useRef(AppState.currentState);
 
@@ -99,7 +101,7 @@ export default function App() {
     const handleAppStateChange = (nextAppState) => {
       if (appState.current.match(/inactive|background/) && nextAppState === "active") {
         if (phaseEndAt) {
-          setPhaseEndAt((prev) => prev); // force a re-render to recalc remaining
+          setTick(t => (t + 1) % 100000); // force a re-render to recalc remaining
         }
       }
       appState.current = nextAppState;
@@ -107,6 +109,10 @@ export default function App() {
 
     const subscription = AppState.addEventListener("change", handleAppStateChange);
     return () => subscription?.remove();
+  }, [phaseEndAt]);
+
+  useEffect(() => {
+    endAtRef.current = phaseEndAt;
   }, [phaseEndAt]);
 
   const playChime = async () => {
@@ -176,20 +182,22 @@ export default function App() {
   useEffect(() => {
     if (!running) return;
     clearInterval(tickRef.current);
-    tickRef.current = setInterval(async () => {
-      if (!phaseEndAt) return;
-      if (Date.now() >= phaseEndAt) {
+    const id = setInterval(async () => {
+      const end = endAtRef.current;
+      if (!end) return;
+
+      if (Date.now() >= end) {
         setShowConfetti(true);
         await playChime();
         await triggerHaptic();
         await startPhase(phase === "focus" ? "break" : "focus");
       } else {
-        // trigger re-render cheaply
-        setPhaseEndAt((x) => x);
+        setTick(t => (t + 1) % 100000);
       }
-    }, 200);
-    return () => clearInterval(tickRef.current);
-  }, [running, phaseEndAt, phase, durations]);
+    }, 250);
+    tickRef.current = id;
+    return () => clearInterval(id);
+  }, [running, phase]); // ← only these deps
 
   // controls
   const onStart = () => startPhase("focus");
