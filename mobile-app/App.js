@@ -6,7 +6,6 @@ import * as Notifications from "expo-notifications";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
-import ConfettiOverlay from "./components/ConfettiOverlay";
 
 // Real vs dev durations
 const DUR = { focus: 25 * 60, break: 5 * 60 };
@@ -23,23 +22,18 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
-  const [phase, setPhase] = useState("focus");      // "focus" | "break"
+  const [phase, setPhase] = useState("focus");            // "focus" | "break"
   const [running, setRunning] = useState(false);
-  const [fast, setFast] = useState(Constants.executionEnvironment === 'storeClient' ? false : true);
-  const [phaseEndAt, setPhaseEndAt] = useState(null); // epoch ms
-  const [notificationId, setNotificationId] = useState(null);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [remaining, setRemaining] = useState(0); // remaining seconds in current phase
-  const endAtRef = useRef(null);      // NEW: read inside interval
-  const tickRef = useRef(null);
-  const appState = useRef(AppState.currentState);
-
-  // audio
-  const soundRef = useRef(null);
-
+  const [fast, setFast] = useState(Constants.executionEnvironment === "storeClient" ? false : true);
+  const [phaseEndAt, setPhaseEndAt] = useState(null);     // epoch ms
+  const [remaining, setRemaining] = useState(0);          // seconds left for display
   const durations = useMemo(() => (fast ? DUR_DEV : DUR), [fast]);
 
-  // Load saved state & ask notification permission
+  const endAtRef = useRef(null);           // read by interval without re-rendering
+  const notificationIdRef = useRef(null);  // currently scheduled local notif id
+  const appState = useRef(AppState.currentState);
+  const soundRef = useRef(null);
+
   useEffect(() => {
     const loadState = async () => {
       try {
@@ -50,18 +44,22 @@ export default function App() {
           if (storedEndAt && now < storedEndAt) {
             setPhase(storedPhase);
             setPhaseEndAt(storedEndAt);
+            setRemaining(Math.max(0, Math.floor((storedEndAt - now) / 1000)));
             setRunning(true);
           } else if (storedEndAt && now >= storedEndAt) {
             const elapsed = now - storedEndAt;
-            const phaseDuration = storedPhase === "focus" ? durations.break : durations.focus;
-            const newPhase = storedPhase === "focus" ? "break" : "focus";
-            if (elapsed < phaseDuration * 1000) {
-              setPhase(newPhase);
-              setPhaseEndAt(storedEndAt + phaseDuration * 1000);
+            const nextPhase = storedPhase === "focus" ? "break" : "focus";
+            const nextDur = storedPhase === "focus" ? durations.break : durations.focus;
+            if (elapsed < nextDur * 1000) {
+              const newEnd = storedEndAt + nextDur * 1000;
+              setPhase(nextPhase);
+              setPhaseEndAt(newEnd);
+              setRemaining(Math.max(0, Math.floor((newEnd - now) / 1000)));
               setRunning(true);
             } else {
               setPhase("focus");
               setPhaseEndAt(null);
+              setRemaining(0);
               setRunning(false);
             }
           }
@@ -72,17 +70,16 @@ export default function App() {
     };
 
     const requestNotificationPermissions = async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== "granted") {
-        console.warn("Notification permissions not granted");
-      }
+      try {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== "granted") console.warn("Notification permissions not granted");
+      } catch {}
     };
 
     loadState();
     requestNotificationPermissions();
   }, [durations]);
 
-  // prepare audio (play in iOS silent mode)
   useEffect(() => {
     (async () => {
       try {
@@ -96,145 +93,98 @@ export default function App() {
     return () => soundRef.current?.unloadAsync();
   }, []);
 
-  // handle app foreground to force re-render
+  useEffect(() => { endAtRef.current = phaseEndAt; }, [phaseEndAt]);
+
   useEffect(() => {
-    const handleAppStateChange = (nextAppState) => {
-      if (appState.current.match(/inactive|background/) && nextAppState === "active") {
-        if (phaseEndAt) {
-          const newRemaining = Math.max(0, Math.floor((phaseEndAt - Date.now()) / 1000));
-          setRemaining(newRemaining);
-        }
+    const onState = (next) => {
+      if (appState.current.match(/inactive|background/) && next === "active" && phaseEndAt) {
+        setRemaining(Math.max(0, Math.floor((phaseEndAt - Date.now()) / 1000)));
       }
-      appState.current = nextAppState;
+      appState.current = next;
     };
-
-    const subscription = AppState.addEventListener("change", handleAppStateChange);
-    return () => subscription?.remove();
+    const sub = AppState.addEventListener("change", onState);
+    return () => sub?.remove();
   }, [phaseEndAt]);
-
-  useEffect(() => {
-    endAtRef.current = phaseEndAt;
-  }, [phaseEndAt]);
-
-  const playChime = async () => {
-    try { await soundRef.current?.replayAsync(); } catch {}
-  };
-
-  const triggerHaptic = async () => {
-    try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
-  };
-
-  const saveState = async (newPhase, newEnd) => {
-    try {
-      await AsyncStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ phase: newPhase, phaseStartAt: Date.now(), phaseEndAt: newEnd })
-      );
-    } catch (e) { console.warn("Failed to save state:", e); }
-  };
-
-  const clearState = async () => {
-    try { await AsyncStorage.removeItem(STORAGE_KEY); } catch (e) {}
-  };
 
   const cancelNotification = async () => {
-    if (notificationId) {
-      try { await Notifications.cancelScheduledNotificationAsync(notificationId); } catch {}
-      setNotificationId(null);
+    if (notificationIdRef.current) {
+      try { await Notifications.cancelScheduledNotificationAsync(notificationIdRef.current); } catch {}
+      notificationIdRef.current = null;
     }
   };
 
-  const scheduleNotification = async (endTime, nextPhase) => {
+  const schedulePhaseNotification = async (endTime, nextPhase) => {
+    await cancelNotification(); // prevent stacking
     try {
-      await cancelNotification(); // Cancel any existing notification
-
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: nextPhase === "focus" ? "Break time!" : "Focus time!",
-          body: nextPhase === "focus" ? "Time for a break" : "Time to focus",
+        body:  nextPhase === "focus" ? "Time for a break" : "Time to focus",
           sound: true,
         },
-        trigger: { type: 'date', date: new Date(endTime) },
+        trigger: { type: "date", date: new Date(endTime) },
       });
-      setNotificationId(id);
-    } catch (e) { console.warn("Failed to schedule notification:", e); }
+      notificationIdRef.current = id;
+    } catch (e) {
+      console.warn("Failed to schedule notification:", e?.message);
+    }
   };
 
-  const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
-  const ss = String(remaining % 60).padStart(2, "0");
+  const saveState = async (p, end) => {
+    try { await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ phase: p, phaseStartAt: Date.now(), phaseEndAt: end })); }
+    catch (e) { console.warn("Failed to save state:", e); }
+  };
 
-  // start the given phase
   const startPhase = async (next) => {
     const seconds = next === "focus" ? durations.focus : durations.break;
-    const endTime = Date.now() + seconds * 1000;
-
+    const end = Date.now() + seconds * 1000;
     setPhase(next);
-    setPhaseEndAt(endTime);
+    setPhaseEndAt(end);
     setRemaining(seconds);
     setRunning(true);
-    await saveState(next, endTime);
+    await saveState(next, end);
     const nextPhase = next === "focus" ? "break" : "focus";
-    await scheduleNotification(endTime, nextPhase);
+    await schedulePhaseNotification(end, nextPhase);
   };
 
-  // ticking & auto-flip phase
+  const onStart  = () => startPhase("focus");
+  const onPause  = async () => { setRunning(false); await cancelNotification(); };
+  const onStop   = async () => { setRunning(false); setPhase("focus"); setPhaseEndAt(null); setRemaining(0); await cancelNotification(); await AsyncStorage.removeItem(STORAGE_KEY); };
+  const onResume = async () => {
+    if (!phaseEndAt) return;
+    const remainMs = Math.max(0, phaseEndAt - Date.now());
+    const newEnd = Date.now() + remainMs;
+    setPhaseEndAt(newEnd);
+    setRemaining(Math.floor(remainMs / 1000));
+    setRunning(true);
+    await saveState(phase, newEnd);
+    const nextPhase = phase === "focus" ? "break" : "focus";
+    await schedulePhaseNotification(newEnd, nextPhase);
+  };
+
   useEffect(() => {
     if (!running) return;
-    clearInterval(tickRef.current);
     const id = setInterval(async () => {
       const end = endAtRef.current;
       if (!end) return;
 
-      if (Date.now() >= end) {
-        setShowConfetti(true);
-        await playChime();
-        await triggerHaptic();
+      const now = Date.now();
+      if (now >= end) {
+        try { await soundRef.current?.replayAsync(); } catch {}
+        try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
         await startPhase(phase === "focus" ? "break" : "focus");
       } else {
-        const newRemaining = Math.max(0, Math.floor((end - Date.now()) / 1000));
-        setRemaining(newRemaining);
+        setRemaining(Math.max(0, Math.floor((end - now) / 1000)));
       }
     }, 250);
-    tickRef.current = id;
     return () => clearInterval(id);
-  }, [running, phase]); // ← only these deps
+  }, [running, phase]);
 
-  // controls
-  const onStart = () => startPhase("focus");
-
-  const onPause = async () => {
-    setRunning(false);
-    await cancelNotification();
-  };
-  const onResume = async () => {
-    if (!phaseEndAt) return;
-    const remainingMs = Math.max(0, phaseEndAt - Date.now());
-    const remainingSecs = Math.floor(remainingMs / 1000);
-    const newEndTime = Date.now() + remainingMs;
-
-    setPhaseEndAt(newEndTime);
-    setRemaining(remainingSecs);
-    setRunning(true);
-
-    await saveState(phase, newEndTime);
-    const nextPhase = phase === "focus" ? "break" : "focus";
-    await scheduleNotification(newEndTime, nextPhase);
-  };
-  const onStop = async () => {
-    setRunning(false);
-    setPhase("focus");
-    setPhaseEndAt(null);
-    setRemaining(0);
-    await cancelNotification();
-    await clearState();
-  };
+  const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
+  const ss = String(remaining % 60).padStart(2, "0");
 
   const primaryLabel = !running && !phaseEndAt ? "Start" : running ? "Pause" : "Resume";
-  const onPrimary = () => {
-    if (!running && !phaseEndAt) return onStart();
-    if (running) return onPause();
-    return onResume();
-  };
+  const onPrimary = () => (!running && !phaseEndAt ? onStart() : running ? onPause() : onResume());
 
   return (
     <View style={[styles.container, phase === "focus" ? styles.focusBg : styles.breakBg]}>
@@ -255,11 +205,6 @@ export default function App() {
       </View>
 
       <Text style={styles.tagline}>Radical simplicity — 25/5 on loop.</Text>
-      
-      <ConfettiOverlay 
-        visible={showConfetti} 
-        onComplete={() => setShowConfetti(false)} 
-      />
     </View>
   );
 }
