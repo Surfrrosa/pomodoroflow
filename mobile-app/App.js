@@ -6,7 +6,6 @@ import * as Notifications from "expo-notifications";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
-import ConfettiOverlay from "./components/ConfettiOverlay";
 
 // Real vs dev durations
 const DUR = { focus: 25 * 60, break: 5 * 60 };
@@ -27,10 +26,9 @@ export default function App() {
   const [running, setRunning] = useState(false);
   const [fast, setFast] = useState(Constants.executionEnvironment === 'storeClient' ? false : true);
   const [phaseEndAt, setPhaseEndAt] = useState(null); // epoch ms
-  const [notificationId, setNotificationId] = useState(null);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [remaining, setRemaining] = useState(0); // remaining seconds in current phase
   const endAtRef = useRef(null);      // NEW: read inside interval
+  const notificationIdRef = useRef(null); // Track scheduled notification ID
   const tickRef = useRef(null);
   const appState = useRef(AppState.currentState);
 
@@ -137,16 +135,15 @@ export default function App() {
     try { await AsyncStorage.removeItem(STORAGE_KEY); } catch (e) {}
   };
 
-  const cancelNotification = async () => {
-    if (notificationId) {
-      try { await Notifications.cancelScheduledNotificationAsync(notificationId); } catch {}
-      setNotificationId(null);
-    }
-  };
-
-  const scheduleNotification = async (endTime, nextPhase) => {
+  const schedulePhaseNotification = async (endTime, nextPhase) => {
     try {
-      await cancelNotification(); // Cancel any existing notification
+      // Cancel any existing scheduled notification
+      if (notificationIdRef.current) {
+        try { 
+          await Notifications.cancelScheduledNotificationAsync(notificationIdRef.current); 
+        } catch {}
+        notificationIdRef.current = null;
+      }
 
       const id = await Notifications.scheduleNotificationAsync({
         content: {
@@ -156,8 +153,19 @@ export default function App() {
         },
         trigger: { type: 'date', date: new Date(endTime) },
       });
-      setNotificationId(id);
-    } catch (e) { console.warn("Failed to schedule notification:", e); }
+      notificationIdRef.current = id;
+    } catch (e) { 
+      console.warn("Failed to schedule notification:", e); 
+    }
+  };
+
+  const cancelNotification = async () => {
+    if (notificationIdRef.current) {
+      try { 
+        await Notifications.cancelScheduledNotificationAsync(notificationIdRef.current); 
+      } catch {}
+      notificationIdRef.current = null;
+    }
   };
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
@@ -174,7 +182,7 @@ export default function App() {
     setRunning(true);
     await saveState(next, endTime);
     const nextPhase = next === "focus" ? "break" : "focus";
-    await scheduleNotification(endTime, nextPhase);
+    await schedulePhaseNotification(endTime, nextPhase);
   };
 
   // ticking & auto-flip phase
@@ -186,7 +194,6 @@ export default function App() {
       if (!end) return;
 
       if (Date.now() >= end) {
-        setShowConfetti(true);
         await playChime();
         await triggerHaptic();
         await startPhase(phase === "focus" ? "break" : "focus");
@@ -218,7 +225,7 @@ export default function App() {
 
     await saveState(phase, newEndTime);
     const nextPhase = phase === "focus" ? "break" : "focus";
-    await scheduleNotification(newEndTime, nextPhase);
+    await schedulePhaseNotification(newEndTime, nextPhase);
   };
   const onStop = async () => {
     setRunning(false);
@@ -255,11 +262,6 @@ export default function App() {
       </View>
 
       <Text style={styles.tagline}>Radical simplicity — 25/5 on loop.</Text>
-      
-      <ConfettiOverlay 
-        visible={showConfetti} 
-        onComplete={() => setShowConfetti(false)} 
-      />
     </View>
   );
 }
