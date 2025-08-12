@@ -7,6 +7,8 @@ import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 
+const NOTIFS_ENABLED = false; // TEMP while we debug
+
 // Real vs dev durations
 const DUR = { focus: 25 * 60, break: 5 * 60 };
 const DUR_DEV = { focus: 25, break: 5 }; // fast mode for QA
@@ -33,6 +35,10 @@ export default function App() {
   const notificationIdRef = useRef(null);  // currently scheduled local notif id
   const appState = useRef(AppState.currentState);
   const soundRef = useRef(null);
+
+  useEffect(() => { 
+    Notifications.cancelAllScheduledNotificationsAsync().catch(()=>{}); 
+  }, []);
 
   useEffect(() => {
     const loadState = async () => {
@@ -107,6 +113,7 @@ export default function App() {
   }, [phaseEndAt]);
 
   const cancelNotification = async () => {
+    if (!NOTIFS_ENABLED) return;
     if (notificationIdRef.current) {
       try { await Notifications.cancelScheduledNotificationAsync(notificationIdRef.current); } catch {}
       notificationIdRef.current = null;
@@ -114,12 +121,13 @@ export default function App() {
   };
 
   const schedulePhaseNotification = async (endTime, nextPhase) => {
+    if (!NOTIFS_ENABLED) return;
     await cancelNotification(); // prevent stacking
     try {
       const id = await Notifications.scheduleNotificationAsync({
         content: {
           title: nextPhase === "focus" ? "Break time!" : "Focus time!",
-        body:  nextPhase === "focus" ? "Time for a break" : "Time to focus",
+          body: nextPhase === "focus" ? "Time for a break" : "Time to focus",
           sound: true,
         },
         trigger: { type: "date", date: new Date(endTime) },
