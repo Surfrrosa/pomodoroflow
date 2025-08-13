@@ -247,7 +247,6 @@ export default function App() {
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
-
   const primaryLabel = !running && !phaseEndAt ? "Start" : running ? "Pause" : "Resume";
   const onPrimary = () => (!running && !phaseEndAt ? onStart() : running ? onPause() : onResume());
 
