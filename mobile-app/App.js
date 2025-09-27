@@ -1,17 +1,18 @@
 // mobile-app/App.js
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Switch, AppState, Platform } from "react-native";
+import { View, Text, Pressable, StyleSheet, Switch, AppState, Platform, Modal, Alert } from "react-native";
 import { Audio } from "expo-av";
 import * as Notifications from "expo-notifications";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
+import { SplashScreen } from "./components/SplashScreen";
 
 const NOTIFS_ENABLED = process.env.NOTIFS_ENABLED !== 'false';
 
 // Real vs dev durations
 const DUR = { focus: 25 * 60, break: 5 * 60 };
-const DUR_DEV = { focus: 25, break: 5 }; // fast mode for QA
+const DUR_DEV = { focus: 10, break: 5 }; // fast mode for QA - 10 seconds
 
 const STORAGE_KEY = "pomodoroflow_state";
 
@@ -24,11 +25,17 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
   const [phase, setPhase] = useState("focus");            // "focus" | "break"
   const [running, setRunning] = useState(false);
   const [fast, setFast] = useState(Constants.executionEnvironment === "storeClient" ? false : true);
   const [phaseEndAt, setPhaseEndAt] = useState(null);     // epoch ms
   const [remaining, setRemaining] = useState(0);          // seconds left for display
+
+  // Premium state
+  const [isPremium, setIsPremium] = useState(false);
+  const [dailySessions, setDailySessions] = useState(0);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const durations = useMemo(() => (fast ? DUR_DEV : DUR), [fast]);
 
   const endAtRef = useRef(null);           // read by interval without re-rendering
@@ -98,8 +105,33 @@ export default function App() {
       }
     };
 
+    const loadPremiumStatus = async () => {
+      try {
+        // Check premium status
+        const premiumStatus = await AsyncStorage.getItem('@pomodoroflow:is_premium');
+        setIsPremium(premiumStatus === 'true');
+
+        // Check daily sessions
+        const today = new Date().toDateString();
+        const lastDate = await AsyncStorage.getItem('@pomodoroflow:last_session_date');
+        const sessionsStr = await AsyncStorage.getItem('@pomodoroflow:daily_sessions');
+
+        if (lastDate === today) {
+          setDailySessions(parseInt(sessionsStr || '0', 10));
+        } else {
+          // New day, reset sessions
+          setDailySessions(0);
+          await AsyncStorage.setItem('@pomodoroflow:daily_sessions', '0');
+          await AsyncStorage.setItem('@pomodoroflow:last_session_date', today);
+        }
+      } catch (e) {
+        console.warn("Failed to load premium status:", e);
+      }
+    };
+
     initializeApp();
     loadState();
+    loadPremiumStatus();
   }, [durations]);
 
   useEffect(() => {
@@ -162,23 +194,29 @@ export default function App() {
 
   const scheduleOnce = async ({ title, body, endTime, label }) => {
     if (!NOTIFS_ENABLED) return null;
-    
-    const key = `${label}-${new Date(endTime).getTime()}`;
-    
+
+    const key = `${label}-${Math.floor(endTime / 1000)}`; // Round to nearest second
+
     if (lastScheduleKeyRef.current === key) {
       console.log('[NOTIF] Skipping duplicate schedule:', key);
       return null;
     }
-    
-    await cancelNotification(); // prevent stacking
-    
+
+    // Always cancel existing notifications first
+    await cancelNotification();
+
     try {
       console.log('[NOTIF] Scheduling notification:', { key, endTime, title });
       const id = await Notifications.scheduleNotificationAsync({
-        content: { title, body, sound: true },
+        content: {
+          title,
+          body,
+          sound: true,
+          data: { phase: label, scheduledAt: endTime }
+        },
         trigger: { type: 'date', date: new Date(endTime) },
       });
-      
+
       notificationIdRef.current = id;
       lastScheduleKeyRef.current = key;
       console.log('[NOTIF] Notification scheduled successfully:', id);
@@ -190,8 +228,11 @@ export default function App() {
   };
 
   const schedulePhaseNotification = async (endTime, nextPhase) => {
-    const title = nextPhase === "focus" ? "Break time!" : "Focus time!";
-    const body = nextPhase === "focus" ? "Time for a break" : "Time to focus";
+    const title = nextPhase === "focus" ? "Focus time!" : "Break time!";
+    const body = nextPhase === "focus" ? "Ready to focus? Let's do this!" : "Great work! Time for a well-deserved break.";
+
+    console.log(`[NOTIF DEBUG] About to schedule: ${title} in ${Math.floor((endTime - Date.now()) / 1000)} seconds`);
+
     return scheduleOnce({ title, body, endTime, label: nextPhase });
   };
 
@@ -212,7 +253,23 @@ export default function App() {
     await schedulePhaseNotification(end, nextPhase);
   };
 
-  const onStart  = () => startPhase("focus");
+  const onStart = async () => {
+    // Check session limit for free users
+    if (!isPremium && dailySessions >= 5) {
+      setShowUpgrade(true);
+      return;
+    }
+
+    // Increment session count for free users
+    if (!isPremium) {
+      const newCount = dailySessions + 1;
+      setDailySessions(newCount);
+      await AsyncStorage.setItem('@pomodoroflow:daily_sessions', newCount.toString());
+      await AsyncStorage.setItem('@pomodoroflow:last_session_date', new Date().toDateString());
+    }
+
+    startPhase("focus");
+  };
   const onPause  = async () => { setRunning(false); await cancelNotification(); };
   const onStop   = async () => { setRunning(false); setPhase("focus"); setPhaseEndAt(null); setRemaining(0); await cancelNotification(); await AsyncStorage.removeItem(STORAGE_KEY); };
   const onResume = async () => {
@@ -237,6 +294,11 @@ export default function App() {
       if (now >= end) {
         try { await soundRef.current?.replayAsync(); } catch {}
         try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+
+        // Clear any existing notifications first
+        await cancelNotification();
+
+        // Transition to next phase
         await startPhase(phase === "focus" ? "break" : "focus");
       } else {
         setRemaining(Math.max(0, Math.floor((end - now) / 1000)));
@@ -250,6 +312,11 @@ export default function App() {
 
   const primaryLabel = !running && !phaseEndAt ? "Start" : running ? "Pause" : "Resume";
   const onPrimary = () => (!running && !phaseEndAt ? onStart() : running ? onPause() : onResume());
+
+  // Show splash screen first
+  if (isLoading) {
+    return <SplashScreen onComplete={() => setIsLoading(false)} />;
+  }
 
   return (
     <View style={[styles.container, phase === "focus" ? styles.focusBg : styles.breakBg]}>
@@ -269,7 +336,60 @@ export default function App() {
         <Switch value={fast} onValueChange={setFast} />
       </View>
 
+      {/* Premium Status Display */}
+      <View style={styles.premiumStatus}>
+        {isPremium ? (
+          <Text style={styles.premiumText}>✨ Premium User</Text>
+        ) : (
+          <Text style={styles.freeText}>
+            Free: {dailySessions}/5 sessions today
+          </Text>
+        )}
+      </View>
+
       <Text style={styles.tagline}>Radical simplicity — 25/5 on loop.</Text>
+
+      {/* Upgrade Prompt Modal */}
+      <Modal
+        visible={showUpgrade}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowUpgrade(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modal}>
+            <Text style={styles.title}>Daily Limit Reached</Text>
+            <Text style={styles.message}>You've used {dailySessions} of 5 free sessions today.</Text>
+
+            <View style={styles.features}>
+              <Text style={styles.featuresTitle}>Premium includes:</Text>
+              <Text style={styles.feature}>✓ Unlimited daily sessions</Text>
+              <Text style={styles.feature}>✓ Custom timer durations</Text>
+              <Text style={styles.feature}>✓ Session history & analytics</Text>
+              <Text style={styles.feature}>✓ Premium sounds & themes</Text>
+            </View>
+
+            <View style={styles.pricing}>
+              <Text style={styles.price}>$4.99</Text>
+              <Text style={styles.priceSubtext}>One-time purchase • No subscriptions</Text>
+            </View>
+
+            <Pressable
+              style={styles.purchaseButton}
+              onPress={() => {
+                Alert.alert("Coming Soon", "Premium purchases will be available in the App Store version!");
+                setShowUpgrade(false);
+              }}
+            >
+              <Text style={styles.purchaseButtonText}>Upgrade to Premium</Text>
+            </Pressable>
+
+            <Pressable style={styles.closeButton} onPress={() => setShowUpgrade(false)}>
+              <Text style={styles.closeButtonText}>Maybe Later</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -286,5 +406,23 @@ const styles = StyleSheet.create({
   stopText: { color: "rgba(255,255,255,0.85)", fontSize: 14, fontWeight: "600" },
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
   devLabel: { color: "rgba(255,255,255,0.8)", marginRight: 8 },
+  premiumStatus: { marginTop: 20, alignItems: "center" },
+  premiumText: { color: "#4CAF50", fontSize: 16, fontWeight: "600" },
+  freeText: { color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: "500" },
   tagline: { position: "absolute", bottom: 28, color: "rgba(255,255,255,0.5)" },
+  // Modal styles
+  overlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.7)", justifyContent: "center", alignItems: "center", padding: 20 },
+  modal: { backgroundColor: "#1a1a1a", borderRadius: 16, padding: 24, width: "100%", maxWidth: 380, alignItems: "center" },
+  title: { fontSize: 24, fontWeight: "bold", color: "#ffffff", textAlign: "center", marginBottom: 8 },
+  message: { fontSize: 16, color: "#cccccc", textAlign: "center", marginBottom: 24, lineHeight: 22 },
+  features: { width: "100%", marginBottom: 24 },
+  featuresTitle: { fontSize: 18, fontWeight: "600", color: "#ffffff", marginBottom: 12, textAlign: "center" },
+  feature: { fontSize: 16, color: "#cccccc", marginBottom: 8, paddingLeft: 8 },
+  pricing: { alignItems: "center", marginBottom: 24 },
+  price: { fontSize: 32, fontWeight: "bold", color: "#4CAF50", marginBottom: 4 },
+  priceSubtext: { fontSize: 14, color: "#999999" },
+  purchaseButton: { backgroundColor: "#4CAF50", paddingVertical: 16, paddingHorizontal: 32, borderRadius: 12, width: "100%", alignItems: "center", marginBottom: 12 },
+  purchaseButtonText: { color: "#ffffff", fontSize: 18, fontWeight: "600" },
+  closeButton: { paddingVertical: 8 },
+  closeButtonText: { color: "#999999", fontSize: 16 },
 });

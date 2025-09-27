@@ -23,6 +23,10 @@
       }
     },
     "production": {
+      "autoIncrement": true,
+      "env": {
+        "NODE_ENV": "production"
+      },
       "ios": {
         "bundleIdentifier": "com.pomodoroflow.app"
       },

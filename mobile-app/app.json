@@ -15,9 +15,13 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["background-processing"],
+        "UIBackgroundModes": [
+          "background-processing",
+          "background-processing"
+        ],
         "NSUserNotificationsUsageDescription": "This app uses notifications to alert you when Pomodoro sessions end."
-      }
+      },
+      "bundleIdentifier": "com.anonymous.pomodoroflow"
     },
     "android": {
       "adaptiveIcon": {
@@ -28,7 +32,8 @@
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
-        "android.permission.WAKE_LOCK"
+        "android.permission.WAKE_LOCK",
+        "android.permission.SCHEDULE_EXACT_ALARM"
       ]
     },
     "web": {
