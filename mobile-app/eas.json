@@ -28,7 +28,7 @@
         "NODE_ENV": "production"
       },
       "ios": {
-        "bundleIdentifier": "com.pomodoroflow.app"
+        "bundleIdentifier": "com.surfrrosa.pomodoroflow"
       },
       "android": {
         "package": "com.pomodoroflow.app"

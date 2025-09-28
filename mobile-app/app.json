@@ -21,7 +21,7 @@
         ],
         "NSUserNotificationsUsageDescription": "This app uses notifications to alert you when Pomodoro sessions end."
       },
-      "bundleIdentifier": "com.anonymous.pomodoroflow"
+      "bundleIdentifier": "com.surfrrosa.pomodoroflow"
     },
     "android": {
       "adaptiveIcon": {

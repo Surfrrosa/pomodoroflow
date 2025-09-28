@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="180" ry="180" fill="#1f2329"/>
+
+  <!-- Tomato Shape -->
+  <circle cx="512" cy="550" r="280" fill="#FF6B6B"/>
+
+  <!-- Tomato Highlight -->
+  <ellipse cx="450" cy="480" rx="80" ry="100" fill="#FF8E8E" opacity="0.6"/>
+
+  <!-- Stem -->
+  <rect x="480" y="220" width="64" height="120" rx="32" ry="32" fill="#4CAF50"/>
+
+  <!-- Leaves -->
+  <ellipse cx="440" cy="260" rx="30" ry="60" fill="#66BB6A" transform="rotate(-30 440 260)"/>
+  <ellipse cx="584" cy="260" rx="30" ry="60" fill="#66BB6A" transform="rotate(30 584 260)"/>
+
+  <!-- Timer Arc (subtle) -->
+  <path d="M 232 550 A 280 280 0 0 1 512 270" stroke="#FFFFFF" stroke-width="8" fill="none" opacity="0.3"/>
+
+  <!-- Focus Dot -->
+  <circle cx="512" cy="550" r="20" fill="#FFFFFF" opacity="0.8"/>
+</svg>
