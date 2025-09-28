@@ -24,6 +24,7 @@
       "bundleIdentifier": "com.surfrrosa.pomodoroflow"
     },
     "android": {
+      "package": "com.surfrrosa.pomodoroflow",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

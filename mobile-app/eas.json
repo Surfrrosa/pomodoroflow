@@ -31,7 +31,7 @@
         "bundleIdentifier": "com.surfrrosa.pomodoroflow"
       },
       "android": {
-        "package": "com.pomodoroflow.app"
+        "package": "com.surfrrosa.pomodoroflow"
       }
     }
   },
