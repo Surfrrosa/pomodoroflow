@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.anonymous.pomodoroflow</string>
+          <string>com.surfrrosa.pomodoroflow</string>
         </array>
       </dict>
     </array>
@@ -46,11 +46,8 @@
     </dict>
     <key>NSUserNotificationsUsageDescription</key>
     <string>This app uses notifications to alert you when Pomodoro sessions end.</string>
-    <key>UIBackgroundModes</key>
-    <array>
-      <string>background-processing</string>
-      <string>background-processing</string>
-    </array>
+    <key>RCTNewArchEnabled</key>
+    <true/>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

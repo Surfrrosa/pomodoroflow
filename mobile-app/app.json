@@ -14,17 +14,16 @@
     },
     "ios": {
       "supportsTablet": true,
+      "icon": "./assets/icon.png",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "background-processing",
-          "background-processing"
-        ],
         "NSUserNotificationsUsageDescription": "This app uses notifications to alert you when Pomodoro sessions end."
       },
       "bundleIdentifier": "com.surfrrosa.pomodoroflow"
     },
     "android": {
       "package": "com.surfrrosa.pomodoroflow",
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
