@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PomodoroFlow Icon Generator</title>
+</head>
+<body>
+    <h2>PomodoroFlow App Icon Generator</h2>
+    <canvas id="iconCanvas" width="512" height="512" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <button onclick="downloadIcon()">Download Icon (512x512 PNG)</button>
+
+    <script>
+        const canvas = document.getElementById('iconCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = 512;
+        canvas.height = 512;
+
+        // Draw background circle
+        ctx.fillStyle = '#1f2329';
+        ctx.beginPath();
+        ctx.arc(256, 256, 256, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw tomato body
+        ctx.fillStyle = '#FF6B6B';
+        ctx.beginPath();
+        ctx.arc(256, 280, 140, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw tomato highlight
+        ctx.fillStyle = 'rgba(255, 142, 142, 0.7)';
+        ctx.beginPath();
+        ctx.save();
+        ctx.scale(1, 1.25);
+        ctx.arc(220, 192, 40, 0, Math.PI * 2);
+        ctx.restore();
+        ctx.fill();
+
+        // Draw stem
+        ctx.fillStyle = '#4CAF50';
+        ctx.fillRect(240, 110, 32, 60);
+
+        // Draw leaves
+        ctx.fillStyle = '#66BB6A';
+
+        // Left leaf
+        ctx.save();
+        ctx.translate(220, 130);
+        ctx.rotate(-Math.PI/6);
+        ctx.scale(1, 2);
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Right leaf
+        ctx.save();
+        ctx.translate(292, 130);
+        ctx.rotate(Math.PI/6);
+        ctx.scale(1, 2);
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Draw timer arc
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(256, 280, 140, Math.PI, 0);
+        ctx.stroke();
+
+        // Draw timer indicator
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(256, 140, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw focus dot
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.beginPath();
+        ctx.arc(256, 280, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        function downloadIcon() {
+            const link = document.createElement('a');
+            link.download = 'pomodoroflow-icon-512x512.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>

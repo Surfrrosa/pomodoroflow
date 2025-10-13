@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PomodoroFlow Screenshots Generator</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 20px; }
+        .phone-frame {
+            width: 360px;
+            height: 640px;
+            border: 3px solid #333;
+            border-radius: 25px;
+            margin: 20px;
+            display: inline-block;
+            overflow: hidden;
+            background: #fff;
+        }
+        .screen { width: 100%; height: 100%; position: relative; }
+        button { margin: 10px; padding: 10px 20px; }
+    </style>
+</head>
+<body>
+    <h2>PomodoroFlow App Screenshots Generator</h2>
+    <p>Generate professional app store screenshots for Google Play Store</p>
+
+    <div class="phone-frame">
+        <canvas id="screenshot1" width="360" height="640"></canvas>
+    </div>
+    <div class="phone-frame">
+        <canvas id="screenshot2" width="360" height="640"></canvas>
+    </div>
+    <div class="phone-frame">
+        <canvas id="screenshot3" width="360" height="640"></canvas>
+    </div>
+
+    <br>
+    <button onclick="downloadScreenshot(1)">Download Screenshot 1 (Timer Screen)</button>
+    <button onclick="downloadScreenshot(2)">Download Screenshot 2 (Session Complete)</button>
+    <button onclick="downloadScreenshot(3)">Download Screenshot 3 (Premium Features)</button>
+    <button onclick="downloadAll()">Download All Screenshots</button>
+
+    <script>
+        function drawScreenshot1() {
+            const canvas = document.getElementById('screenshot1');
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, 360, 640);
+
+            // Status bar
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px -apple-system';
+            ctx.fillText('9:41', 20, 25);
+            ctx.fillText('100%', 320, 25);
+
+            // App title
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 24px -apple-system';
+            ctx.textAlign = 'center';
+            ctx.fillText('PomodoroFlow', 180, 80);
+
+            // Tomato timer (main feature)
+            ctx.fillStyle = '#FF6B6B';
+            ctx.beginPath();
+            ctx.arc(180, 200, 80, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Stem
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(170, 130, 20, 40);
+
+            // Timer display
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 36px monospace';
+            ctx.fillText('25:00', 180, 210);
+
+            // Progress arc
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.arc(180, 200, 90, -Math.PI/2, Math.PI/2);
+            ctx.stroke();
+
+            // Session info
+            ctx.fillStyle = '#ccc';
+            ctx.font = '16px -apple-system';
+            ctx.fillText('Focus Session', 180, 320);
+            ctx.fillText('Session 1 of 4', 180, 345);
+
+            // Start button
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(80, 400, 200, 50);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 18px -apple-system';
+            ctx.fillText('START FOCUS', 180, 430);
+
+            // Bottom features
+            ctx.fillStyle = '#666';
+            ctx.font = '14px -apple-system';
+            ctx.fillText('🔔 Smart notifications', 180, 500);
+            ctx.fillText('📊 Progress tracking', 180, 525);
+            ctx.fillText('⚡ Productivity boost', 180, 550);
+        }
+
+        function drawScreenshot2() {
+            const canvas = document.getElementById('screenshot2');
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, 360, 640);
+
+            // Status bar
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px -apple-system';
+            ctx.textAlign = 'left';
+            ctx.fillText('9:41', 20, 25);
+            ctx.textAlign = 'right';
+            ctx.fillText('100%', 340, 25);
+
+            // Success animation area
+            ctx.fillStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.arc(180, 180, 100, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Checkmark
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(150, 180);
+            ctx.lineTo(170, 200);
+            ctx.lineTo(210, 160);
+            ctx.stroke();
+
+            // Completion message
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 28px -apple-system';
+            ctx.textAlign = 'center';
+            ctx.fillText('Well Done!', 180, 320);
+
+            ctx.font = '18px -apple-system';
+            ctx.fillStyle = '#ccc';
+            ctx.fillText('Focus session completed', 180, 350);
+            ctx.fillText('Time for a 5-minute break', 180, 375);
+
+            // Stats
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 16px -apple-system';
+            ctx.fillText('Today\'s Progress', 180, 430);
+
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(80, 450, 200, 20);
+            ctx.fillStyle = '#fff';
+            ctx.font = '14px -apple-system';
+            ctx.fillText('3 / 4 sessions complete', 180, 485);
+
+            // Continue button
+            ctx.fillStyle = '#FF6B6B';
+            ctx.fillRect(80, 520, 200, 50);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 18px -apple-system';
+            ctx.fillText('START BREAK', 180, 550);
+        }
+
+        function drawScreenshot3() {
+            const canvas = document.getElementById('screenshot3');
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, 360, 640);
+
+            // Status bar
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px -apple-system';
+            ctx.textAlign = 'left';
+            ctx.fillText('9:41', 20, 25);
+            ctx.textAlign = 'right';
+            ctx.fillText('100%', 340, 25);
+
+            // Premium badge
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(100, 60, 160, 40);
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 16px -apple-system';
+            ctx.textAlign = 'center';
+            ctx.fillText('PREMIUM', 180, 85);
+
+            // Title
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 24px -apple-system';
+            ctx.fillText('Unlimited Focus', 180, 140);
+
+            // Features list
+            const features = [
+                '✓ Unlimited daily sessions',
+                '✓ Custom timer lengths',
+                '✓ Advanced statistics',
+                '✓ Focus music & sounds',
+                '✓ Dark & light themes',
+                '✓ Export your data'
+            ];
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '16px -apple-system';
+            ctx.textAlign = 'left';
+
+            features.forEach((feature, index) => {
+                ctx.fillText(feature, 40, 200 + (index * 35));
+            });
+
+            // Pricing
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(40, 420, 280, 80);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 20px -apple-system';
+            ctx.textAlign = 'center';
+            ctx.fillText('$2.99/month', 180, 450);
+            ctx.font = '14px -apple-system';
+            ctx.fillText('Cancel anytime', 180, 475);
+
+            // CTA button
+            ctx.fillStyle = '#FFD700';
+            ctx.fillRect(40, 520, 280, 50);
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 18px -apple-system';
+            ctx.fillText('UPGRADE NOW', 180, 550);
+
+            // Free trial note
+            ctx.fillStyle = '#888';
+            ctx.font = '12px -apple-system';
+            ctx.fillText('7-day free trial included', 180, 590);
+        }
+
+        function downloadScreenshot(num) {
+            const canvas = document.getElementById(`screenshot${num}`);
+            const link = document.createElement('a');
+            link.download = `pomodoroflow-screenshot-${num}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadAll() {
+            for(let i = 1; i <= 3; i++) {
+                setTimeout(() => downloadScreenshot(i), i * 500);
+            }
+        }
+
+        // Initialize screenshots
+        drawScreenshot1();
+        drawScreenshot2();
+        drawScreenshot3();
+    </script>
+</body>
+</html>
