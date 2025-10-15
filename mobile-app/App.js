@@ -28,7 +28,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [phase, setPhase] = useState("focus");            // "focus" | "break"
   const [running, setRunning] = useState(false);
-  const [fast, setFast] = useState(Constants.executionEnvironment === "storeClient" ? false : true);
+  const [fast, setFast] = useState(__DEV__);
   const [phaseEndAt, setPhaseEndAt] = useState(null);     // epoch ms
   const [remaining, setRemaining] = useState(0);          // seconds left for display
 
@@ -298,7 +298,7 @@ export default function App() {
       </Pressable>
 
       {/* Dev Fast Mode - hidden in production */}
-      {Constants.executionEnvironment !== "storeClient" && (
+      {__DEV__ && (
         <View style={styles.row}>
           <Text style={styles.devLabel}>Dev Fast Mode</Text>
           <Switch value={fast} onValueChange={setFast} />
