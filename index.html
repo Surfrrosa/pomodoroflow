@@ -1,31 +1,160 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PomodoroFlow - Simple Pomodoro Timer</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PomodoroFlow — Focus • Flow • Achieve</title>
+  <meta name="description" content="A calm, zero‑friction Pomodoro timer for builders. Radical simplicity — 25/5 on loop." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="PomodoroFlow — Focus • Flow • Achieve" />
+  <meta property="og:description" content="A calm, zero‑friction Pomodoro timer for builders. Radical simplicity — 25/5 on loop." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="assets/banner.jpg" />
+  <meta property="og:image:alt" content="PomodoroFlow hero with tomato logo on a dark textured background" />
+  <meta property="og:site_name" content="PomodoroFlow" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PomodoroFlow — Focus • Flow • Achieve" />
+  <meta name="twitter:description" content="A calm, zero‑friction Pomodoro timer for builders. Radical simplicity — 25/5 on loop." />
+  <meta name="twitter:image" content="assets/banner.jpg" />
+
+  <link rel="icon" href="assets/favicon.png" sizes="any" type="image/png" />
+
+  <style>
+    :root {
+      --bg: #0f1115;
+      --muted: #1a1d24;
+      --text: #e6e7ea;
+      --dim: #a1a7b3;
+      --accent: #e6462f;
+      --ring: #2a2f39;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; }
+    a { color: var(--text); text-decoration: none; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .brand img { width:40px; height:40px; border-radius: 999px; }
+    .brand h1 { font-size: 18px; margin:0; letter-spacing: 0.3px; }
+    .hero { display:grid; grid-template-columns: 1.1fr 0.9fr; align-items:center; gap: 32px; margin-top: 24px; }
+    .card { background: linear-gradient(180deg, var(--muted), transparent 70%), var(--muted); border:1px solid var(--ring); border-radius: var(--radius); padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+    .title { font-size: clamp(32px, 5vw, 58px); line-height: 1.05; margin: 0 0 10px; }
+    .subtitle { color: var(--dim); font-size: clamp(16px, 2vw, 20px); margin: 0 0 22px; }
+    .badges { display:flex; gap:12px; flex-wrap:wrap; margin: 18px 0 0; }
+    .badge { display:inline-flex; align-items:center; justify-content:center; background:#161a20; border:1px solid var(--ring); border-radius: 10px; padding: 10px 14px; font-weight:600; }
+    .cta { display:flex; gap:14px; align-items:center; margin-top: 22px; }
+    .cta a.primary { background: var(--accent); color:white; padding: 12px 16px; border-radius:12px; font-weight:700; }
+    .cta a.secondary { border:1px solid var(--ring); padding: 12px 16px; border-radius:12px; color:var(--text); }
+    .bullets { display:flex; gap:16px; flex-wrap: wrap; margin-top: 16px; }
+    .pill { background:#15181f; border:1px solid var(--ring); padding: 10px 12px; border-radius: 999px; color: var(--dim); font-weight:600; }
+    .hero-visual { position:relative; }
+    .hero-visual .device { width:100%; border-radius: calc(var(--radius) + 8px); display:block; border:1px solid var(--ring); }
+    .shots { display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 12px; }
+    .shots img { width:100%; border-radius: 14px; border:1px solid var(--ring); }
+    .section { margin-top: 56px; }
+    .features { display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .feature { padding:18px; border-radius: 14px; border:1px solid var(--ring); background:#12151b; }
+    .feature h3 { margin: 0 0 6px; font-size: 18px; }
+    footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--ring); color: var(--dim); font-size: 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .links a { color: var(--dim); margin-right: 14px; }
+    @media (max-width: 880px) {
+      .hero { grid-template-columns: 1fr; }
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "PomodoroFlow",
+  "applicationCategory": "ProductivityApplication",
+  "operatingSystem": "iOS, Android",
+  "description": "A calm, zero‑friction Pomodoro timer for builders. Radical simplicity — 25/5 on loop.",
+  "image": "assets/banner.jpg",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "creator": {
+    "@type": "Person",
+    "name": "Shaina Pauley"
+  },
+  "url": "https://pomodoroflow.app"
+}
+  </script>
 </head>
 <body>
-    <div class="container">
-        <div class="timer-display">
-            <div class="time" id="timeDisplay">25:00</div>
-            <div class="session-info">
-                <div class="session-indicator" id="sessionIndicator">
-                    <span class="dot active"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                </div>
-                <div class="session-type" id="sessionType">FOCUS</div>
-            </div>
-        </div>
-        
-        <div class="controls">
-            <button class="start-btn" id="startBtn">START</button>
-        </div>
-    </div>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <img src="assets/icon.png" alt="PomodoroFlow tomato icon" />
+        <h1>PomodoroFlow</h1>
+      </div>
+      <nav class="links">
+        <a href="#features">Features</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="#download">Download</a>
+      </nav>
+    </header>
 
-    <script src="script.js"></script>
+    <section class="hero">
+      <div class="card">
+        <h2 class="title">A calm, zero‑friction Pomodoro for builders.</h2>
+        <p class="subtitle">No accounts. No nags. Start a timer, breathe, ship. Radical simplicity — 25/5 on loop.</p>
+
+        <div class="bullets">
+          <span class="pill">Radical simplicity</span>
+          <span class="pill">Gentle, nervous‑system friendly</span>
+          <span class="pill">Beautiful dark mode</span>
+        </div>
+
+        <div id="download" class="cta">
+          <a class="primary" href="https://apps.apple.com/us/app/pomodoroflow/id6753604260" target="_blank" rel="noopener">App Store</a>
+          <a class="secondary" href="https://play.google.com/store/apps/details?id=com.surfrrosa.pomodoroflow" target="_blank" rel="noopener">Google Play</a>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <img class="device" src="assets/banner.png" alt="PomodoroFlow hero banner" />
+        <div class="shots">
+          <img src="assets/screen-focus.png" alt="Focus timer screen" />
+          <img src="assets/screen-break.png" alt="Break timer screen" />
+          <img src="assets/screen-loading.png" alt="Loading / launch screen" />
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="features">
+        <div class="feature">
+          <h3>Zero setup</h3>
+          <p>Open the app and start a focus cycle in seconds. No account, no distractions.</p>
+        </div>
+        <div class="feature">
+          <h3>Gentle rhythm</h3>
+          <p>Thoughtful notifications and haptics to ease you into focus and breaks—never nagging.</p>
+        </div>
+        <div class="feature">
+          <h3>Designed for calm</h3>
+          <p>Minimalist dark‑mode UI with large type and room to breathe. Focus without friction.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>© 2025 PomodoroFlow • By Shaina Pauley</div>
+      <div class="links">
+        <a href="privacy.html">Privacy</a>
+        <a href="mailto:shainaep@gmail.com">Contact</a>
+        <a href="press/">Press kit</a>
+      </div>
+    </footer>
+  </div>
 </body>
 </html>
