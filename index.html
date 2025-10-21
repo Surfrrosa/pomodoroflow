@@ -36,7 +36,7 @@
     html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; }
     a { color: var(--text); text-decoration: none; }
     .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
-    header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding: 8px 0; }
+    header { display:flex; align-items:center; justify-content:flex-end; gap:16px; padding: 8px 0; }
     .brand { display:flex; align-items:center; gap:16px; }
     .brand img { width: 64px; height: 64px; border-radius: 999px; box-shadow: 0 4px 12px rgba(230, 70, 47, 0.2); }
     .brand h1 { font-size: 28px; margin:0; letter-spacing: 0.5px; font-weight: 700; }
@@ -49,7 +49,7 @@
     .store-badges { display:flex; gap:16px; align-items:center; margin-top: 28px; flex-wrap: wrap; }
     .store-badges a { display: block; transition: transform 0.2s ease, opacity 0.2s ease; }
     .store-badges a:hover { transform: translateY(-2px); opacity: 0.9; }
-    .store-badges img { height: 54px; width: auto; display: block; }
+    .store-badges img { height: 68px; width: auto; display: block; }
     .bullets { display:flex; gap:16px; flex-wrap: wrap; margin-top: 16px; }
     .pill { background:#15181f; border:1px solid var(--ring); padding: 10px 12px; border-radius: 999px; color: var(--dim); font-weight:600; }
     .hero-visual { position:relative; }
@@ -97,11 +97,6 @@
         <img src="assets/icon.png" alt="PomodoroFlow tomato icon" />
         <h1>PomodoroFlow</h1>
       </div>
-      <nav class="links">
-        <a href="#features">Features</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="#download">Download</a>
-      </nav>
     </header>
 
     <section class="hero">
