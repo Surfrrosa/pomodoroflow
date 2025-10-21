@@ -1,0 +1,6 @@
+# robots.txt for PomodoroFlow
+User-agent: *
+Allow: /
+Disallow: /press/
+
+Sitemap: https://pomodoroflow.app/sitemap.xml

@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PomodoroFlow — Focus • Flow • Achieve</title>
-  <meta name="description" content="Calm, zero-friction Pomodoro for neurodivergents. No account, no static. Radical simplicity on a 25/5 loop." />
+  <title>PomodoroFlow - Pomodoro Timer App for ADHD & Neurodivergents | Free Focus Timer</title>
+  <meta name="description" content="Free Pomodoro timer app designed for ADHD and neurodivergent minds. Simple 25/5 focus sessions with gentle notifications. No signup, no distractions. Available on iOS & Android." />
+  <meta name="keywords" content="pomodoro timer, ADHD timer, neurodivergent productivity, focus timer, pomodoro app, ADHD productivity, time management, work timer, study timer, productivity app" />
+  <link rel="canonical" href="https://pomodoroflow.app" />
+  <meta name="theme-color" content="#0f1115" />
 
   <!-- Open Graph -->
   <meta property="og:title" content="PomodoroFlow — Focus • Flow • Achieve" />
@@ -43,7 +46,7 @@
     header { display:flex; align-items:center; justify-content:flex-end; gap:16px; padding: 8px 0; }
     .brand { display:flex; align-items:center; gap:16px; }
     .brand img { width: 64px; height: 64px; border-radius: 999px; box-shadow: 0 4px 12px rgba(230, 70, 47, 0.2); }
-    .brand h1 { font-size: 28px; margin:0; letter-spacing: 0.5px; font-weight: 700; }
+    .brand .logo-text { font-size: 28px; margin:0; letter-spacing: 0.5px; font-weight: 700; }
     .hero { display:grid; grid-template-columns: 1.1fr 0.9fr; align-items:center; gap: 32px; margin-top: 24px; }
     .card { background: linear-gradient(180deg, var(--muted), transparent 70%), var(--muted); border:1px solid var(--ring); border-radius: var(--radius); padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
     .title { font-size: clamp(32px, 5vw, 58px); line-height: 1.05; margin: 0 0 10px; }
@@ -53,8 +56,8 @@
     .store-badges { display:flex; gap:16px; align-items:center; margin-top: 28px; flex-wrap: wrap; }
     .store-badges a { display: block; transition: transform 0.2s ease, opacity 0.2s ease; }
     .store-badges a:hover { transform: translateY(-2px); opacity: 0.9; }
-    .store-badges a:first-child img { height: 60px; width: auto; display: block; }
-    .store-badges a:nth-child(2) img { height: 68px; width: auto; display: block; }
+    .store-badges a:first-child img { height: 50px; width: auto; display: block; }
+    .store-badges a:nth-child(2) img { height: 74px; width: auto; display: block; }
     .bullets { display:flex; gap:16px; flex-wrap: wrap; margin-top: 16px; }
     .pill { background:#15181f; border:1px solid var(--ring); padding: 10px 12px; border-radius: 999px; color: var(--dim); font-weight:600; }
     .hero-visual { position:relative; }
@@ -80,8 +83,8 @@
   "name": "PomodoroFlow",
   "applicationCategory": "ProductivityApplication",
   "operatingSystem": "iOS, Android",
-  "description": "A calm, zero‑friction Pomodoro timer for builders. Radical simplicity — 25/5 on loop.",
-  "image": "assets/banner.jpg",
+  "description": "Free Pomodoro timer app designed for ADHD and neurodivergent minds. Simple 25/5 focus sessions with gentle notifications.",
+  "image": "https://pomodoroflow.app/assets/banner.jpg",
   "offers": {
     "@type": "Offer",
     "price": "0",
@@ -91,7 +94,12 @@
     "@type": "Person",
     "name": "Shaina Pauley"
   },
-  "url": "https://pomodoroflow.app"
+  "url": "https://pomodoroflow.app",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5.0",
+    "ratingCount": "1"
+  }
 }
   </script>
 </head>
@@ -99,14 +107,15 @@
   <div class="container">
     <header>
       <div class="brand">
-        <img src="assets/icon.png" alt="PomodoroFlow tomato icon" />
-        <h1>PomodoroFlow</h1>
+        <img src="assets/icon.png" alt="PomodoroFlow - Pomodoro timer app icon" />
+        <span class="logo-text">PomodoroFlow</span>
       </div>
     </header>
 
+    <main>
     <section class="hero">
       <div class="card">
-        <h2 class="title">Calm, zero-friction Pomodoro for neurodivergents.</h2>
+        <h1 class="title">Calm, zero-friction Pomodoro for neurodivergents.</h1>
         <p class="subtitle">No account, no static. Radical simplicity on a 25/5 loop.</p>
 
         <div class="bullets">
@@ -126,14 +135,15 @@
 
       <div class="hero-visual">
         <div class="shots">
-          <img src="assets/screen-loading.png" alt="Loading / launch screen" />
-          <img src="assets/screen-focus.png" alt="Focus timer screen" />
-          <img src="assets/screen-break.png" alt="Break timer screen" />
+          <img src="assets/screen-loading.png" alt="PomodoroFlow app loading screen with tomato logo" />
+          <img src="assets/screen-focus.png" alt="25-minute focus session timer in progress with dark mode interface" />
+          <img src="assets/screen-break.png" alt="5-minute break timer screen with gentle notification" />
         </div>
       </div>
     </section>
 
-    <section id="features" class="section">
+    <section id="features" class="section" aria-labelledby="features-heading">
+      <h2 id="features-heading" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">App Features</h2>
       <div class="features">
         <div class="feature">
           <h3>Zero setup</h3>
@@ -149,6 +159,7 @@
         </div>
       </div>
     </section>
+    </main>
 
     <footer>
       <div>© 2025 PomodoroFlow • By Shaina Pauley</div>
