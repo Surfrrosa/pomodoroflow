@@ -18,7 +18,8 @@
       "infoPlist": {
         "NSUserNotificationsUsageDescription": "This app uses notifications to alert you when Pomodoro sessions end."
       },
-      "bundleIdentifier": "com.surfrrosa.pomodoroflow"
+      "bundleIdentifier": "com.surfrrosa.pomodoroflow",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "package": "com.surfrrosa.pomodoroflow",
@@ -34,7 +35,8 @@
         "android.permission.VIBRATE",
         "android.permission.WAKE_LOCK",
         "android.permission.SCHEDULE_EXACT_ALARM"
-      ]
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -46,7 +48,9 @@
           "icon": "./assets/icon.png",
           "color": "#ffffff"
         }
-      ]
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/analytics"
     ],
     "extra": {
       "eas": {

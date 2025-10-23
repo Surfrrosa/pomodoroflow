@@ -31,7 +31,52 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.*
 .env*.local
+!.env.example
 
 # typescript
 *.tsbuildinfo
+
+# ============================================
+# SECURITY & PRIVACY - DO NOT COMMIT
+# ============================================
+
+# Firebase & Google Services configuration files
+google-services.json
+GoogleService-Info.plist
+
+# API Keys & Secrets
+**/secrets.json
+**/config/secrets.*
+**/*-secrets.*
+**/*.secret.*
+api-keys.json
+credentials.json
+
+# Authentication & Certificates
+*.cer
+*.der
+*.crt
+*.keystore
+*.keychain
+*.provisionprofile
+auth-config.json
+
+# Private keys
+**/private-key*.json
+**/*-private-key.*
+*.privatekey
+
+# Build artifacts that may contain secrets
+*.ipa
+*.apk
+*.aab
+build/
+android/app/build/
+ios/build/
+
+# Sensitive logs
+crash-logs/
+analytics-debug/

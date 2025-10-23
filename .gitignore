@@ -140,3 +140,38 @@ vite.config.ts.timestamp-*
 webapp-backup/
 landing-page-new/
 README.txt
+
+# ============================================
+# SECURITY & PRIVACY - DO NOT COMMIT
+# ============================================
+
+# Firebase & Google Services
+google-services.json
+GoogleService-Info.plist
+
+# API Keys & Credentials
+**/secrets.json
+**/config/secrets.*
+**/*-secrets.*
+**/*.secret.*
+api-keys.json
+credentials.json
+
+# Authentication
+*.cer
+*.der
+*.crt
+*.keystore
+*.keychain
+*.provisionprofile
+auth-config.json
+
+# Private keys
+**/private-key*.json
+**/*-private-key.*
+*.privatekey
+*.pem
+
+# System files
+.DS_Store
+Thumbs.db

@@ -7,6 +7,7 @@ import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { SplashScreen } from "./components/SplashScreen";
+import AnalyticsService from "./services/AnalyticsService";
 
 const NOTIFS_ENABLED = process.env.NOTIFS_ENABLED !== 'false';
 
@@ -230,14 +231,32 @@ export default function App() {
     await saveState(next, end);
     const nextPhase = next === "focus" ? "break" : "focus";
     await schedulePhaseNotification(end, nextPhase);
+
+    // Track session start
+    await AnalyticsService.logSessionStart(next, seconds);
   };
 
   const onStart = async () => {
     // Session limiting removed for v1.0 - unlimited sessions for all users
     startPhase("focus");
   };
-  const onPause  = async () => { setRunning(false); await cancelNotification(); };
-  const onStop   = async () => { setRunning(false); setPhase("focus"); setPhaseEndAt(null); setRemaining(0); await cancelNotification(); await AsyncStorage.removeItem(STORAGE_KEY); };
+  const onPause  = async () => {
+    setRunning(false);
+    await cancelNotification();
+    // Track session pause
+    await AnalyticsService.logSessionPause(phase, remaining);
+  };
+  const onStop   = async () => {
+    // Track session stop
+    await AnalyticsService.logSessionStop(phase, remaining);
+
+    setRunning(false);
+    setPhase("focus");
+    setPhaseEndAt(null);
+    setRemaining(0);
+    await cancelNotification();
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  };
   const onResume = async () => {
     if (!phaseEndAt) return;
     const remainMs = Math.max(0, phaseEndAt - Date.now());
@@ -248,6 +267,9 @@ export default function App() {
     await saveState(phase, newEnd);
     const nextPhase = phase === "focus" ? "break" : "focus";
     await schedulePhaseNotification(newEnd, nextPhase);
+
+    // Track session resume
+    await AnalyticsService.logSessionResume(phase, Math.floor(remainMs / 1000));
   };
 
   useEffect(() => {
@@ -260,6 +282,11 @@ export default function App() {
       if (now >= end) {
         try { await soundRef.current?.replayAsync(); } catch {}
         try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+
+        // Track session completion
+        const completedPhase = phase;
+        const duration = completedPhase === "focus" ? durations.focus : durations.break;
+        await AnalyticsService.logSessionComplete(completedPhase, duration);
 
         // Clear any existing notifications first
         await cancelNotification();
