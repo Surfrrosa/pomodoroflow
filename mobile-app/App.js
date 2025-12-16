@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
+import { Ionicons } from "@expo/vector-icons";
 import { SplashScreen } from "./components/SplashScreen";
 import { TipJarModal } from "./components/TipJarModal";
 import AnalyticsService from "./services/AnalyticsService";
@@ -346,8 +347,12 @@ function AppContent() {
       )}
 
       <View style={styles.bottomContainer}>
-        <Pressable onPress={() => setShowTipJar(true)}>
-          <Text style={styles.supportLink}>❤️ Support PomodoroFlow</Text>
+        <Pressable
+          onPress={() => setShowTipJar(true)}
+          style={styles.supportButton}
+        >
+          <Ionicons name="heart" size={16} color="#8B1A1A" style={styles.heartIcon} />
+          <Text style={styles.supportLink}>Support PomodoroFlow</Text>
         </Pressable>
         <Text style={styles.tagline}>Radical simplicity — 25/5 on loop.</Text>
       </View>
@@ -382,7 +387,9 @@ const styles = StyleSheet.create({
   premiumText: { color: "#4CAF50", fontSize: 16, fontWeight: "600" },
   freeText: { color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: "500" },
   bottomContainer: { position: "absolute", bottom: 20, alignItems: "center" },
-  supportLink: { color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 8 },
+  supportButton: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  heartIcon: { marginRight: 6 },
+  supportLink: { color: "rgba(255,255,255,0.6)", fontSize: 14 },
   tagline: { color: "rgba(255,255,255,0.5)", fontSize: 14 },
   // Modal styles
   overlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.7)", justifyContent: "center", alignItems: "center", padding: 20 },
