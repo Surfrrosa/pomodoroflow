@@ -3,14 +3,9 @@
  * Handles premium upgrade and subscription logic
  */
 
-import Purchases, { CustomerInfo, PurchasesOffering } from 'react-native-purchases';
+import Purchases from 'react-native-purchases';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const STORAGE_KEYS = {
-  IS_PREMIUM: '@pomodoroflow:is_premium',
-  DAILY_SESSIONS: '@pomodoroflow:daily_sessions',
-  LAST_SESSION_DATE: '@pomodoroflow:last_session_date',
-} as const;
+import { STORAGE_KEYS, MONETIZATION_CONFIG } from '../config/monetization';
 
 export interface PremiumStatus {
   isPremium: boolean;
@@ -34,9 +29,17 @@ export class PurchaseManager {
     if (this.isInitialized) return;
 
     try {
+      // Get API key from environment or config
+      const apiKey = this.getApiKey();
+
+      if (!apiKey || apiKey === 'YOUR_REVENUE_CAT_API_KEY') {
+        console.warn('[PURCHASES] RevenueCat API key not configured - purchases disabled');
+        return;
+      }
+
       // Initialize Revenue Cat
       await Purchases.configure({
-        apiKey: 'YOUR_REVENUE_CAT_API_KEY', // You'll replace this with your actual key
+        apiKey,
       });
 
       // Set user ID (optional but recommended)
@@ -51,27 +54,27 @@ export class PurchaseManager {
     }
   }
 
+  private getApiKey(): string {
+    const Platform = require('react-native').Platform;
+
+    if (Platform.OS === 'ios') {
+      return MONETIZATION_CONFIG.REVENUECAT_IOS_KEY;
+    } else {
+      return MONETIZATION_CONFIG.REVENUECAT_ANDROID_KEY;
+    }
+  }
+
   async getPremiumStatus(): Promise<PremiumStatus> {
     try {
-      // Check if premium was purchased
-      const isPremium = await this.checkPremiumStatus();
-
-      // Get daily session usage
-      const { dailySessionsUsed, isNewDay } = await this.getDailySessionUsage();
-
-      // Reset sessions if it's a new day
-      if (isNewDay) {
-        await this.resetDailySessionCount();
-      }
-
-      const dailySessionsLimit = isPremium ? Infinity : 5;
-      const canStartNewSession = isPremium || dailySessionsUsed < dailySessionsLimit;
+      // Use FreemiumService for comprehensive status check
+      const FreemiumService = require('../services/FreemiumService').default;
+      const status = await FreemiumService.canStartSession();
 
       return {
-        isPremium,
-        dailySessionsUsed: isNewDay ? 0 : dailySessionsUsed,
-        dailySessionsLimit,
-        canStartNewSession,
+        isPremium: status.isPremium,
+        dailySessionsUsed: status.dailySessions,
+        dailySessionsLimit: status.sessionsRemaining === Infinity ? Infinity : 8,
+        canStartNewSession: status.canStart,
       };
     } catch (error) {
       console.error('[PURCHASES] Error getting premium status:', error);
@@ -79,7 +82,7 @@ export class PurchaseManager {
       return {
         isPremium: false,
         dailySessionsUsed: 0,
-        dailySessionsLimit: 5,
+        dailySessionsLimit: 8,
         canStartNewSession: true,
       };
     }
@@ -96,7 +99,8 @@ export class PurchaseManager {
 
       // Check with Revenue Cat for accurate status
       const customerInfo = await Purchases.getCustomerInfo();
-      const isPremium = customerInfo.entitlements.active['premium'] !== undefined;
+      // Check for configured entitlement ID
+      const isPremium = customerInfo.entitlements.active[MONETIZATION_CONFIG.REVENUECAT_ENTITLEMENT_ID] !== undefined;
 
       // Update local storage
       await AsyncStorage.setItem(STORAGE_KEYS.IS_PREMIUM, isPremium.toString());
@@ -113,23 +117,37 @@ export class PurchaseManager {
   async purchasePremium(): Promise<{ success: boolean; error?: string }> {
     if (!this.isInitialized) {
       await this.initialize();
+      if (!this.isInitialized) {
+        return { success: false, error: 'Purchases not initialized' };
+      }
     }
 
     try {
       // Get available offerings
       const offerings = await Purchases.getOfferings();
-      const premiumOffering = offerings.current?.availablePackages.find(
-        pkg => pkg.identifier === 'premium_unlock'
-      );
 
-      if (!premiumOffering) {
-        return { success: false, error: 'Premium upgrade not available' };
+      if (!offerings.current || !offerings.current.availablePackages || offerings.current.availablePackages.length === 0) {
+        return { success: false, error: 'No products available. Please try again later.' };
       }
 
-      // Purchase the offering
-      const purchaseResult = await Purchases.purchasePackage(premiumOffering);
+      // Get the lifetime/premium package (should be the only one)
+      const premiumPackage = offerings.current.availablePackages[0];
 
-      if (purchaseResult.customerInfo.entitlements.active['premium']) {
+      if (!premiumPackage) {
+        return { success: false, error: 'No premium package found. Please try again later.' };
+      }
+
+      if (__DEV__) {
+        console.log('[PURCHASES] Purchasing package:', premiumPackage.identifier);
+      }
+
+      // Purchase the package
+      const purchaseResult = await Purchases.purchasePackage(premiumPackage);
+
+      // Check if premium is now active
+      const isPremium = purchaseResult.customerInfo.entitlements.active[MONETIZATION_CONFIG.REVENUECAT_ENTITLEMENT_ID] !== undefined;
+
+      if (isPremium) {
         // Update local storage
         await AsyncStorage.setItem(STORAGE_KEYS.IS_PREMIUM, 'true');
         console.log('[PURCHASES] Premium purchased successfully!');
@@ -142,7 +160,7 @@ export class PurchaseManager {
 
       // Handle specific error cases
       if (error.userCancelled) {
-        return { success: false, error: 'Purchase cancelled' };
+        return { success: false, error: 'cancelled' }; // Special case - user cancelled
       }
 
       return { success: false, error: error.message || 'Purchase failed' };
@@ -152,11 +170,16 @@ export class PurchaseManager {
   async restorePurchases(): Promise<{ success: boolean; error?: string }> {
     if (!this.isInitialized) {
       await this.initialize();
+      if (!this.isInitialized) {
+        return { success: false, error: 'Purchases not initialized' };
+      }
     }
 
     try {
       const customerInfo = await Purchases.restorePurchases();
-      const isPremium = customerInfo.entitlements.active['premium'] !== undefined;
+
+      // Check for configured entitlement
+      const isPremium = customerInfo.entitlements.active[MONETIZATION_CONFIG.REVENUECAT_ENTITLEMENT_ID] !== undefined;
 
       if (isPremium) {
         await AsyncStorage.setItem(STORAGE_KEYS.IS_PREMIUM, 'true');
@@ -173,50 +196,20 @@ export class PurchaseManager {
 
   async incrementSessionCount(): Promise<void> {
     try {
-      const { dailySessionsUsed } = await this.getDailySessionUsage();
-      const newCount = dailySessionsUsed + 1;
-
-      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_SESSIONS, newCount.toString());
-      await AsyncStorage.setItem(STORAGE_KEYS.LAST_SESSION_DATE, new Date().toDateString());
-
-      console.log(`[PURCHASES] Session count incremented to ${newCount}`);
+      // Use SessionTrackingService for session counting
+      const SessionTrackingService = require('../services/SessionTrackingService').default;
+      await SessionTrackingService.incrementDailySession();
     } catch (error) {
       console.error('[PURCHASES] Error incrementing session count:', error);
     }
   }
 
-  private async getDailySessionUsage(): Promise<{ dailySessionsUsed: number; isNewDay: boolean }> {
-    try {
-      const lastSessionDate = await AsyncStorage.getItem(STORAGE_KEYS.LAST_SESSION_DATE);
-      const dailySessionsStr = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_SESSIONS);
-
-      const today = new Date().toDateString();
-      const isNewDay = lastSessionDate !== today;
-
-      const dailySessionsUsed = isNewDay ? 0 : parseInt(dailySessionsStr || '0', 10);
-
-      return { dailySessionsUsed, isNewDay };
-    } catch (error) {
-      console.error('[PURCHASES] Error getting daily session usage:', error);
-      return { dailySessionsUsed: 0, isNewDay: true };
-    }
-  }
-
-  private async resetDailySessionCount(): Promise<void> {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_SESSIONS, '0');
-      await AsyncStorage.setItem(STORAGE_KEYS.LAST_SESSION_DATE, new Date().toDateString());
-    } catch (error) {
-      console.error('[PURCHASES] Error resetting daily session count:', error);
-    }
-  }
-
   private async getUserId(): Promise<string> {
     // Generate a unique user ID for Revenue Cat
-    let userId = await AsyncStorage.getItem('@pomodoroflow:user_id');
+    let userId = await AsyncStorage.getItem(STORAGE_KEYS.USER_ID);
     if (!userId) {
       userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      await AsyncStorage.setItem('@pomodoroflow:user_id', userId);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_ID, userId);
     }
     return userId;
   }

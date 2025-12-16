@@ -13,6 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import { usePremium } from './PremiumProvider';
+import { MONETIZATION_CONFIG } from '../config/monetization';
 
 interface UpgradePromptProps {
   visible: boolean;
@@ -122,14 +123,13 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
           <View style={styles.features}>
             <Text style={styles.featuresTitle}>Premium includes:</Text>
             <Text style={styles.feature}>✓ Unlimited daily sessions</Text>
-            <Text style={styles.feature}>✓ Custom timer durations</Text>
-            <Text style={styles.feature}>✓ Session history & analytics</Text>
-            <Text style={styles.feature}>✓ Premium sounds & themes</Text>
-            <Text style={styles.feature}>✓ Apple Watch support</Text>
+            <Text style={styles.feature}>✓ No daily limits — ever</Text>
+            <Text style={styles.feature}>✓ Support independent development</Text>
+            <Text style={styles.feature}>✓ One-time payment, lifetime access</Text>
           </View>
 
           <View style={styles.pricing}>
-            <Text style={styles.price}>$4.99</Text>
+            <Text style={styles.price}>{MONETIZATION_CONFIG.PREMIUM_PRICE_DISPLAY}</Text>
             <Text style={styles.priceSubtext}>One-time purchase • No subscriptions</Text>
           </View>
 

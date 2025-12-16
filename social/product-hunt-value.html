@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1270, height=760">
+  <title>PomodoroFlow - Value Prop</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 1270px;
+      height: 760px;
+      background: linear-gradient(135deg, #0f1115 0%, #1a1d24 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #e6e7ea;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(230, 70, 47, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      padding: 60px 80px;
+      max-width: 1200px;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .left {
+      text-align: center;
+      padding: 40px;
+      background: rgba(26, 29, 36, 0.4);
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      border-radius: 24px;
+    }
+
+    .left h2 {
+      font-size: 32px;
+      color: #a1a7b3;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+
+    .problems {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .problem {
+      background: rgba(230, 70, 47, 0.1);
+      border: 1px solid rgba(230, 70, 47, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      font-size: 18px;
+      color: #e6462f;
+      font-weight: 500;
+    }
+
+    .right {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      box-shadow: 0 12px 48px rgba(230, 70, 47, 0.5);
+      margin-bottom: 32px;
+    }
+
+    .right h2 {
+      font-size: 48px;
+      color: #ffffff;
+      margin-bottom: 24px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .benefits {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .benefit {
+      background: rgba(67, 173, 95, 0.1);
+      border: 1px solid rgba(67, 173, 95, 0.3);
+      border-radius: 12px;
+      padding: 16px 24px;
+      font-size: 20px;
+      color: #5ddb7a;
+      font-weight: 600;
+    }
+
+    .arrow {
+      text-align: center;
+      font-size: 48px;
+      color: #e6462f;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <h2>Other Pomodoro Apps</h2>
+      <div class="problems">
+        <div class="problem">Overwhelming settings</div>
+        <div class="problem">Mandatory account creation</div>
+        <div class="problem">Feature bloat</div>
+        <div class="problem">Aggressive notifications</div>
+      </div>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="right">
+      <img src="../assets/icon.png" alt="PomodoroFlow" class="logo">
+      <h2>PomodoroFlow:<br>Just Focus</h2>
+      <div class="benefits">
+        <div class="benefit">✓ Zero configuration</div>
+        <div class="benefit">✓ No account needed</div>
+        <div class="benefit">✓ Radical simplicity</div>
+        <div class="benefit">✓ Gentle, calm design</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

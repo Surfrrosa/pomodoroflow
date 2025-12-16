@@ -2,7 +2,7 @@
   "expo": {
     "name": "PomodoroFlow",
     "slug": "pomodoroflow",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,10 +16,10 @@
       "supportsTablet": true,
       "icon": "./assets/icon.png",
       "infoPlist": {
-        "NSUserNotificationsUsageDescription": "This app uses notifications to alert you when Pomodoro sessions end."
+        "NSUserNotificationsUsageDescription": "This app uses notifications to alert you when Pomodoro sessions end.",
+        "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.surfrrosa.pomodoroflow",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "bundleIdentifier": "com.surfrrosa.pomodoroflow"
     },
     "android": {
       "package": "com.surfrrosa.pomodoroflow",
@@ -35,8 +35,7 @@
         "android.permission.VIBRATE",
         "android.permission.WAKE_LOCK",
         "android.permission.SCHEDULE_EXACT_ALARM"
-      ],
-      "googleServicesFile": "./google-services.json"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -48,9 +47,7 @@
           "icon": "./assets/icon.png",
           "color": "#ffffff"
         }
-      ],
-      "@react-native-firebase/app",
-      "@react-native-firebase/analytics"
+      ]
     ],
     "extra": {
       "eas": {

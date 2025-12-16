@@ -1,21 +1,26 @@
 // mobile-app/App.js
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Switch, AppState, Platform } from "react-native";
+import { View, Text, Pressable, StyleSheet, Switch, AppState, Platform, Modal, Alert } from "react-native";
 import { Audio } from "expo-av";
 import * as Notifications from "expo-notifications";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { SplashScreen } from "./components/SplashScreen";
+import { PremiumProvider, usePremium } from "./components/PremiumProvider";
+import { UpgradePrompt } from "./components/UpgradePrompt";
+import { TipJarModal } from "./components/TipJarModal";
 import AnalyticsService from "./services/AnalyticsService";
+import ReviewPromptService from "./services/ReviewPromptService";
+import SessionTrackingService from "./services/SessionTrackingService";
+import TipJarService from "./services/TipJarService";
+import { STORAGE_KEYS } from "./config/monetization";
 
 const NOTIFS_ENABLED = process.env.NOTIFS_ENABLED !== 'false';
 
 // Real vs dev durations
 const DUR = { focus: 25 * 60, break: 5 * 60 };
 const DUR_DEV = { focus: 10, break: 5 }; // fast mode for QA - 10 seconds
-
-const STORAGE_KEY = "pomodoroflow_state";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -25,18 +30,18 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default function App() {
+function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [phase, setPhase] = useState("focus");            // "focus" | "break"
   const [running, setRunning] = useState(false);
   const [fast, setFast] = useState(__DEV__);
   const [phaseEndAt, setPhaseEndAt] = useState(null);     // epoch ms
   const [remaining, setRemaining] = useState(0);          // seconds left for display
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showTipJar, setShowTipJar] = useState(false);
+  const [tipJarTrigger, setTipJarTrigger] = useState('power_user');
 
-  // Premium features removed for v1.0 - see v1.1-features.md for reimplementation
-  // const [isPremium, setIsPremium] = useState(false);
-  // const [dailySessions, setDailySessions] = useState(0);
-  // const [showUpgrade, setShowUpgrade] = useState(false);
+  const { premiumStatus, canStartSession } = usePremium();
   const durations = useMemo(() => (fast ? DUR_DEV : DUR), [fast]);
 
   const endAtRef = useRef(null);           // read by interval without re-rendering
@@ -74,7 +79,7 @@ export default function App() {
 
     const loadState = async () => {
       try {
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        const stored = await AsyncStorage.getItem(STORAGE_KEYS.TIMER_STATE);
         if (stored) {
           const { phase: storedPhase, phaseEndAt: storedEndAt } = JSON.parse(stored);
           const now = Date.now();
@@ -109,8 +114,18 @@ export default function App() {
     // Premium status loading removed for v1.0
     // const loadPremiumStatus = async () => { ... };
 
+    // Initialize session tracking (legacy user detection, install date)
+    const initializeSessionTracking = async () => {
+      try {
+        await SessionTrackingService.initialize();
+      } catch (error) {
+        if (__DEV__) console.warn('Failed to initialize session tracking:', error);
+      }
+    };
+
     initializeApp();
     loadState();
+    initializeSessionTracking();
   }, [durations]);
 
   useEffect(() => {
@@ -217,7 +232,7 @@ export default function App() {
   };
 
   const saveState = async (p, end) => {
-    try { await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ phase: p, phaseStartAt: Date.now(), phaseEndAt: end })); }
+    try { await AsyncStorage.setItem(STORAGE_KEYS.TIMER_STATE, JSON.stringify({ phase: p, phaseStartAt: Date.now(), phaseEndAt: end })); }
     catch (e) { if (__DEV__) console.warn("Failed to save state:", e); }
   };
 
@@ -237,7 +252,31 @@ export default function App() {
   };
 
   const onStart = async () => {
-    // Session limiting removed for v1.0 - unlimited sessions for all users
+    // Check if user can start a new session using PremiumProvider
+    const canStart = canStartSession();
+
+    if (__DEV__) {
+      console.log('[FREEMIUM] Start session check:', {
+        canStart,
+        isPremium: premiumStatus.isPremium,
+        dailySessionsUsed: premiumStatus.dailySessionsUsed,
+        dailySessionsLimit: premiumStatus.dailySessionsLimit
+      });
+    }
+
+    if (!canStart) {
+      // User hit daily limit - show upgrade prompt
+      await AnalyticsService.logSessionLimitReached(premiumStatus.isPremium);
+      setShowUpgrade(true);
+      return;
+    }
+
+    // Check if approaching limit (show warning)
+    const sessionsRemaining = Math.max(0, premiumStatus.dailySessionsLimit - premiumStatus.dailySessionsUsed);
+    if (sessionsRemaining <= 2 && sessionsRemaining > 0 && !premiumStatus.isPremium && premiumStatus.dailySessionsLimit !== Infinity) {
+      await AnalyticsService.logSessionLimitWarning(sessionsRemaining);
+    }
+
     startPhase("focus");
   };
   const onPause  = async () => {
@@ -255,7 +294,7 @@ export default function App() {
     setPhaseEndAt(null);
     setRemaining(0);
     await cancelNotification();
-    await AsyncStorage.removeItem(STORAGE_KEY);
+    await AsyncStorage.removeItem(STORAGE_KEYS.TIMER_STATE);
   };
   const onResume = async () => {
     if (!phaseEndAt) return;
@@ -287,6 +326,21 @@ export default function App() {
         const completedPhase = phase;
         const duration = completedPhase === "focus" ? durations.focus : durations.break;
         await AnalyticsService.logSessionComplete(completedPhase, duration);
+
+        // Increment session count and check for review prompts (focus sessions only)
+        if (completedPhase === "focus") {
+          const totalSessions = await ReviewPromptService.incrementTotalSessions();
+          await SessionTrackingService.incrementDailySession();
+
+          // Check tip jar triggers (after review prompts)
+          const daysSinceInstall = await ReviewPromptService.getDaysSinceInstall();
+          const tipJarCheck = await TipJarService.checkTriggers(totalSessions, daysSinceInstall);
+
+          if (tipJarCheck.shouldShow) {
+            setTipJarTrigger(tipJarCheck.trigger);
+            setShowTipJar(true);
+          }
+        }
 
         // Clear any existing notifications first
         await cancelNotification();
@@ -324,6 +378,15 @@ export default function App() {
         <Text style={styles.stopText}>Stop</Text>
       </Pressable>
 
+      {/* Session status - show for free users */}
+      {!premiumStatus.isPremium && premiumStatus.dailySessionsLimit !== Infinity && (
+        <View style={styles.premiumStatus}>
+          <Text style={styles.freeText}>
+            {premiumStatus.dailySessionsUsed}/{premiumStatus.dailySessionsLimit} sessions today
+          </Text>
+        </View>
+      )}
+
       {/* Dev Fast Mode - hidden in production */}
       {__DEV__ && (
         <View style={styles.row}>
@@ -332,8 +395,36 @@ export default function App() {
         </View>
       )}
 
-      <Text style={styles.tagline}>Radical simplicity — 25/5 on loop.</Text>
+      <View style={styles.bottomContainer}>
+        <Pressable onPress={() => setShowTipJar(true)}>
+          <Text style={styles.supportLink}>Support this app</Text>
+        </Pressable>
+        <Text style={styles.tagline}>Radical simplicity — 25/5 on loop.</Text>
+      </View>
+
+      {/* Upgrade Modal */}
+      <UpgradePrompt
+        visible={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        trigger="session_limit"
+      />
+
+      {/* Tip Jar Modal */}
+      <TipJarModal
+        visible={showTipJar}
+        onClose={() => setShowTipJar(false)}
+        trigger={tipJarTrigger}
+      />
     </View>
+  );
+}
+
+// Wrap AppContent in PremiumProvider
+export default function App() {
+  return (
+    <PremiumProvider>
+      <AppContent />
+    </PremiumProvider>
   );
 }
 
@@ -352,7 +443,9 @@ const styles = StyleSheet.create({
   premiumStatus: { marginTop: 20, alignItems: "center" },
   premiumText: { color: "#4CAF50", fontSize: 16, fontWeight: "600" },
   freeText: { color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: "500" },
-  tagline: { position: "absolute", bottom: 28, color: "rgba(255,255,255,0.5)" },
+  bottomContainer: { position: "absolute", bottom: 20, alignItems: "center" },
+  supportLink: { color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 8 },
+  tagline: { color: "rgba(255,255,255,0.5)", fontSize: 14 },
   // Modal styles
   overlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.7)", justifyContent: "center", alignItems: "center", padding: 20 },
   modal: { backgroundColor: "#1a1a1a", borderRadius: 16, padding: 24, width: "100%", maxWidth: 380, alignItems: "center" },

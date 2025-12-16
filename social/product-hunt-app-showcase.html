@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1270, height=760">
+  <title>PomodoroFlow - App Showcase</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 1270px;
+      height: 760px;
+      background: linear-gradient(135deg, #0f1115 0%, #1a1d24 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #e6e7ea;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(230, 70, 47, 0.12) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 100px;
+      padding: 60px;
+      z-index: 1;
+    }
+
+    .phone-showcase {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .phone {
+      border-radius: 32px;
+      border: 3px solid #2a2f39;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+      width: 240px;
+    }
+
+    .phone.center {
+      width: 280px;
+      transform: translateY(-20px);
+      box-shadow: 0 32px 100px rgba(230, 70, 47, 0.3);
+    }
+
+    .content {
+      max-width: 500px;
+    }
+
+    .logo-brand {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      box-shadow: 0 8px 32px rgba(230, 70, 47, 0.5);
+    }
+
+    .brand {
+      font-size: 42px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    h1 {
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #ffffff;
+      margin-bottom: 20px;
+    }
+
+    .highlight {
+      color: #e6462f;
+    }
+
+    .description {
+      font-size: 24px;
+      color: #a1a7b3;
+      line-height: 1.4;
+      margin-bottom: 32px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .stat {
+      background: rgba(26, 29, 36, 0.8);
+      border: 1px solid #2a2f39;
+      border-radius: 16px;
+      padding: 20px 24px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: 800;
+      color: #e6462f;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 16px;
+      color: #a1a7b3;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="phone-showcase">
+      <img src="../assets/screen-loading.png" alt="Loading" class="phone">
+      <img src="../assets/screen-focus.png" alt="Focus" class="phone center">
+      <img src="../assets/screen-break.png" alt="Break" class="phone">
+    </div>
+
+    <div class="content">
+      <div class="logo-brand">
+        <img src="../assets/icon.png" alt="PomodoroFlow" class="logo">
+        <span class="brand">PomodoroFlow</span>
+      </div>
+
+      <h1>
+        <span class="highlight">25/5</span> on loop.<br>
+        Zero friction.
+      </h1>
+
+      <p class="description">
+        Purpose-built for ADHD and neurodivergent minds who need simplicity, not complexity.
+      </p>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Accounts Required</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Configuration</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Focus</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">FREE</div>
+          <div class="stat-label">Always</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
