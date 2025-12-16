@@ -23,8 +23,6 @@
     },
     "android": {
       "package": "com.surfrrosa.pomodoroflow",
-      "compileSdkVersion": 34,
-      "targetSdkVersion": 34,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
