@@ -1,6 +1,9 @@
 /**
  * TipJarModal - Empathetic donation prompt
  * Triggered at thoughtful moments when users have gotten value
+ *
+ * NOTE: iOS only in v1.0.3 due to Android billing library conflicts
+ * Android support will be added in v1.0.4
  */
 
 import React, { useState } from 'react';
@@ -14,9 +17,14 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import * as InAppPurchases from 'expo-in-app-purchases';
 import TipJarService from '../services/TipJarService';
 import { MONETIZATION_CONFIG } from '../config/monetization';
+
+// Conditional import - only load on iOS to avoid Android billing conflicts
+let InAppPurchases: any = null;
+if (Platform.OS === 'ios') {
+  InAppPurchases = require('expo-in-app-purchases');
+}
 
 interface TipJarModalProps {
   visible: boolean;
@@ -30,6 +38,11 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
   trigger,
 }) => {
   const [purchasing, setPurchasing] = useState(false);
+
+  // Don't render on Android in v1.0.3 (billing library conflict)
+  if (Platform.OS === 'android') {
+    return null;
+  }
 
   const getTipOptions = () => [
     {
