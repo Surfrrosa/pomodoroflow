@@ -31,12 +31,14 @@ export const MONETIZATION_CONFIG = {
 export const STORAGE_KEYS = {
   // App state
   TIMER_STATE: 'pomodoroflow_state',
+  INSTALL_DATE: '@pomodoroflow:install_date',
 
   // Review prompts
   REVIEW_TOTAL_SESSIONS: '@pomodoroflow:review_total_sessions',
   REVIEW_LAST_PROMPT_DATE: '@pomodoroflow:review_last_prompt_date',
   REVIEW_PROMPT_COUNT: '@pomodoroflow:review_prompt_count',
   VERSION_PROMPTED: '@pomodoroflow:version_prompted',
+  DAILY_SESSIONS: '@pomodoroflow:daily_sessions',
 } as const;
 
 /**
