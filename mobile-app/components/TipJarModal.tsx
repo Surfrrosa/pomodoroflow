@@ -124,25 +124,11 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
   };
 
   const getTitle = () => {
-    switch (trigger) {
-      case 'power_user':
-        return 'You\'re crushing it!';
-      case 'anniversary':
-        return 'One month together!';
-      default:
-        return 'Enjoying PomodoroFlow?';
-    }
+    return 'Thank you for using PomodoroFlow';
   };
 
   const getMessage = () => {
-    switch (trigger) {
-      case 'power_user':
-        return 'You\'ve completed 25 focus sessions! If PomodoroFlow has helped you, consider supporting its development. No pressure — the app stays free either way.';
-      case 'anniversary':
-        return 'You\'ve been using PomodoroFlow for 30 days! If it\'s helped you stay focused, consider buying me a coffee. The app will always be free, but your support helps keep it ad-free.';
-      default:
-        return 'If PomodoroFlow has helped you, consider supporting its development. The app will always be free and ad-free.';
-    }
+    return 'This app is completely free and always will be. If PomodoroFlow has helped you stay focused, consider supporting our work. Every bit helps us keep building tools you love. No pressure. We\'re happy you\'re here :-)';
   };
 
   return (

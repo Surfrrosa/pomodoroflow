@@ -7,12 +7,9 @@ import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { SplashScreen } from "./components/SplashScreen";
-import { PremiumProvider, usePremium } from "./components/PremiumProvider";
-import { UpgradePrompt } from "./components/UpgradePrompt";
 import { TipJarModal } from "./components/TipJarModal";
 import AnalyticsService from "./services/AnalyticsService";
 import ReviewPromptService from "./services/ReviewPromptService";
-import SessionTrackingService from "./services/SessionTrackingService";
 import TipJarService from "./services/TipJarService";
 import { STORAGE_KEYS } from "./config/monetization";
 
@@ -37,11 +34,8 @@ function AppContent() {
   const [fast, setFast] = useState(__DEV__);
   const [phaseEndAt, setPhaseEndAt] = useState(null);     // epoch ms
   const [remaining, setRemaining] = useState(0);          // seconds left for display
-  const [showUpgrade, setShowUpgrade] = useState(false);
   const [showTipJar, setShowTipJar] = useState(false);
   const [tipJarTrigger, setTipJarTrigger] = useState('power_user');
-
-  const { premiumStatus, canStartSession } = usePremium();
   const durations = useMemo(() => (fast ? DUR_DEV : DUR), [fast]);
 
   const endAtRef = useRef(null);           // read by interval without re-rendering
@@ -114,18 +108,8 @@ function AppContent() {
     // Premium status loading removed for v1.0
     // const loadPremiumStatus = async () => { ... };
 
-    // Initialize session tracking (legacy user detection, install date)
-    const initializeSessionTracking = async () => {
-      try {
-        await SessionTrackingService.initialize();
-      } catch (error) {
-        if (__DEV__) console.warn('Failed to initialize session tracking:', error);
-      }
-    };
-
     initializeApp();
     loadState();
-    initializeSessionTracking();
   }, [durations]);
 
   useEffect(() => {
@@ -252,31 +236,6 @@ function AppContent() {
   };
 
   const onStart = async () => {
-    // Check if user can start a new session using PremiumProvider
-    const canStart = canStartSession();
-
-    if (__DEV__) {
-      console.log('[FREEMIUM] Start session check:', {
-        canStart,
-        isPremium: premiumStatus.isPremium,
-        dailySessionsUsed: premiumStatus.dailySessionsUsed,
-        dailySessionsLimit: premiumStatus.dailySessionsLimit
-      });
-    }
-
-    if (!canStart) {
-      // User hit daily limit - show upgrade prompt
-      await AnalyticsService.logSessionLimitReached(premiumStatus.isPremium);
-      setShowUpgrade(true);
-      return;
-    }
-
-    // Check if approaching limit (show warning)
-    const sessionsRemaining = Math.max(0, premiumStatus.dailySessionsLimit - premiumStatus.dailySessionsUsed);
-    if (sessionsRemaining <= 2 && sessionsRemaining > 0 && !premiumStatus.isPremium && premiumStatus.dailySessionsLimit !== Infinity) {
-      await AnalyticsService.logSessionLimitWarning(sessionsRemaining);
-    }
-
     startPhase("focus");
   };
   const onPause  = async () => {
@@ -330,7 +289,6 @@ function AppContent() {
         // Increment session count and check for review prompts (focus sessions only)
         if (completedPhase === "focus") {
           const totalSessions = await ReviewPromptService.incrementTotalSessions();
-          await SessionTrackingService.incrementDailySession();
 
           // Check tip jar triggers (after review prompts)
           const daysSinceInstall = await ReviewPromptService.getDaysSinceInstall();
@@ -379,14 +337,6 @@ function AppContent() {
       </Pressable>
 
       {/* Session status - show for free users */}
-      {!premiumStatus.isPremium && premiumStatus.dailySessionsLimit !== Infinity && (
-        <View style={styles.premiumStatus}>
-          <Text style={styles.freeText}>
-            {premiumStatus.dailySessionsUsed}/{premiumStatus.dailySessionsLimit} sessions today
-          </Text>
-        </View>
-      )}
-
       {/* Dev Fast Mode - hidden in production */}
       {__DEV__ && (
         <View style={styles.row}>
@@ -397,17 +347,10 @@ function AppContent() {
 
       <View style={styles.bottomContainer}>
         <Pressable onPress={() => setShowTipJar(true)}>
-          <Text style={styles.supportLink}>Support this app</Text>
+          <Text style={styles.supportLink}>❤️ Support PomodoroFlow</Text>
         </Pressable>
         <Text style={styles.tagline}>Radical simplicity — 25/5 on loop.</Text>
       </View>
-
-      {/* Upgrade Modal */}
-      <UpgradePrompt
-        visible={showUpgrade}
-        onClose={() => setShowUpgrade(false)}
-        trigger="session_limit"
-      />
 
       {/* Tip Jar Modal */}
       <TipJarModal
@@ -419,13 +362,8 @@ function AppContent() {
   );
 }
 
-// Wrap AppContent in PremiumProvider
 export default function App() {
-  return (
-    <PremiumProvider>
-      <AppContent />
-    </PremiumProvider>
-  );
+  return <AppContent />;
 }
 
 const styles = StyleSheet.create({
