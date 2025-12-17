@@ -87,13 +87,9 @@ class ReviewPromptService {
         }
       }
 
-      // Check if already prompted in this version
-      const versionPrompted = await AsyncStorage.getItem(STORAGE_KEYS.VERSION_PROMPTED);
-      const currentVersion = await this.getAppVersion();
-      if (versionPrompted === currentVersion) {
-        // Only prompt once per version
-        return false;
-      }
+      // Don't check version lock - cooldown and quota are sufficient
+      // This allows prompts across multiple triggers in the same version
+      // (e.g., 10 sessions, then 7-day anniversary, then productive day)
 
       return true;
     } catch (error) {
@@ -113,10 +109,6 @@ class ReviewPromptService {
 
       await AsyncStorage.setItem(STORAGE_KEYS.REVIEW_PROMPT_COUNT, newCount.toString());
       await AsyncStorage.setItem(STORAGE_KEYS.REVIEW_LAST_PROMPT_DATE, Date.now().toString());
-
-      // Record version
-      const currentVersion = await this.getAppVersion();
-      await AsyncStorage.setItem(STORAGE_KEYS.VERSION_PROMPTED, currentVersion);
 
       await AnalyticsService.logEvent('review_prompt_shown', {
         trigger,
@@ -141,6 +133,9 @@ class ReviewPromptService {
 
       await AsyncStorage.setItem(STORAGE_KEYS.REVIEW_TOTAL_SESSIONS, newCount.toString());
 
+      // Also increment daily session count (for productive day trigger)
+      await this.incrementDailySessionCount();
+
       // Check if any triggers should fire
       await this.checkTriggers(newCount);
 
@@ -157,20 +152,20 @@ class ReviewPromptService {
    * @param {number} totalSessions
    */
   async checkTriggers(totalSessions) {
-    // Trigger #1: After milestone completed focus sessions
+    // Trigger #1: After milestone completed focus sessions (one-time at exactly 10)
     if (totalSessions === MONETIZATION_CONFIG.REVIEW_PROMPT_SESSIONS_MILESTONE) {
       await this.requestReview('10_sessions');
       return;
     }
 
-    // Trigger #2: Anniversary with 5+ sessions
+    // Trigger #2: Anniversary with 5+ sessions (one-time at exactly 7 days)
     const daysSinceInstall = await this.getDaysSinceInstall();
     if (daysSinceInstall === MONETIZATION_CONFIG.REVIEW_PROMPT_ANNIVERSARY_DAYS && totalSessions >= 5) {
       await this.requestReview('7_day_anniversary');
       return;
     }
 
-    // Trigger #3: Productive day
+    // Trigger #3: Productive day (can trigger multiple times if user has many 8-session days)
     const sessionsToday = await this.getDailySessionCount();
     if (sessionsToday === MONETIZATION_CONFIG.REVIEW_PROMPT_PRODUCTIVE_DAY_SESSIONS) {
       await this.requestReview('productive_day');
@@ -202,11 +197,62 @@ class ReviewPromptService {
    */
   async getDailySessionCount() {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_SESSIONS);
-      return parseInt(stored || '0', 10);
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_SESSIONS);
+      if (!data) return 0;
+
+      const parsed = JSON.parse(data);
+      const today = this.getTodayDateString();
+
+      // Reset if it's a new day
+      if (parsed.date !== today) {
+        return 0;
+      }
+
+      return parsed.count;
     } catch {
       return 0;
     }
+  }
+
+  /**
+   * Increment daily session count (resets automatically at midnight)
+   * @returns {Promise<number>} - New count for today
+   */
+  async incrementDailySessionCount() {
+    try {
+      const today = this.getTodayDateString();
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_SESSIONS);
+
+      let count = 1;
+      if (data) {
+        const parsed = JSON.parse(data);
+        // If same day, increment; if new day, reset to 1
+        count = parsed.date === today ? parsed.count + 1 : 1;
+      }
+
+      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_SESSIONS, JSON.stringify({
+        date: today,
+        count,
+      }));
+
+      if (__DEV__) console.log(`[Review] Daily sessions: ${count}`);
+      return count;
+    } catch (error) {
+      if (__DEV__) console.warn('[Review] Error incrementing daily sessions:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get today's date as YYYY-MM-DD string (local timezone)
+   * @returns {string}
+   */
+  getTodayDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -287,8 +333,59 @@ class ReviewPromptService {
       await AsyncStorage.removeItem(STORAGE_KEYS.REVIEW_TOTAL_SESSIONS);
       await AsyncStorage.removeItem(STORAGE_KEYS.INSTALL_DATE);
       await AsyncStorage.removeItem(STORAGE_KEYS.VERSION_PROMPTED);
+      await AsyncStorage.removeItem(STORAGE_KEYS.DAILY_SESSIONS);
       console.log('[Review] All review tracking reset for testing');
     }
+  }
+
+  /**
+   * Development helper - Set session count to test triggers
+   * Only works in __DEV__ mode
+   * @param {number} count - Session count to set
+   */
+  async setSessionCountForTesting(count) {
+    if (__DEV__) {
+      await AsyncStorage.setItem(STORAGE_KEYS.REVIEW_TOTAL_SESSIONS, count.toString());
+      console.log(`[Review] Session count set to ${count} for testing`);
+    }
+  }
+
+  /**
+   * Development helper - Set daily session count to test productive day trigger
+   * Only works in __DEV__ mode
+   * @param {number} count - Daily session count to set
+   */
+  async setDailySessionCountForTesting(count) {
+    if (__DEV__) {
+      const today = this.getTodayDateString();
+      await AsyncStorage.setItem(STORAGE_KEYS.DAILY_SESSIONS, JSON.stringify({
+        date: today,
+        count,
+      }));
+      console.log(`[Review] Daily session count set to ${count} for testing`);
+    }
+  }
+
+  /**
+   * Development helper - Force a review prompt for testing
+   * Only works in __DEV__ mode
+   */
+  async forcePromptForTesting() {
+    if (__DEV__) {
+      // Clear cooldown temporarily
+      const lastPrompt = await AsyncStorage.getItem(STORAGE_KEYS.REVIEW_LAST_PROMPT_DATE);
+      await AsyncStorage.removeItem(STORAGE_KEYS.REVIEW_LAST_PROMPT_DATE);
+
+      const result = await this.requestReview('dev_test');
+
+      // Restore last prompt date if it existed
+      if (lastPrompt) {
+        await AsyncStorage.setItem(STORAGE_KEYS.REVIEW_LAST_PROMPT_DATE, lastPrompt);
+      }
+
+      return result;
+    }
+    return false;
   }
 
   /**
