@@ -21,9 +21,14 @@ import TipJarService from '../services/TipJarService';
 import { MONETIZATION_CONFIG } from '../config/monetization';
 
 // Conditional import - only load on iOS to avoid Android billing conflicts
+// Wrapped in try-catch to handle missing package gracefully
 let InAppPurchases: any = null;
 if (Platform.OS === 'ios') {
-  InAppPurchases = require('expo-in-app-purchases');
+  try {
+    InAppPurchases = require('expo-in-app-purchases');
+  } catch (e) {
+    if (__DEV__) console.warn('[TipJar] expo-in-app-purchases not available:', e);
+  }
 }
 
 interface TipJarModalProps {
@@ -74,6 +79,11 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
   const handleTip = async (productId: string, amount: number) => {
     setPurchasing(true);
     try {
+      // Check if InAppPurchases is available
+      if (!InAppPurchases) {
+        throw new Error('In-app purchases not available');
+      }
+
       // Connect to store
       await InAppPurchases.connectAsync();
 
