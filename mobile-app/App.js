@@ -12,6 +12,7 @@ import { TipJarModal } from "./components/TipJarModal";
 import AnalyticsService from "./services/AnalyticsService";
 import ReviewPromptService from "./services/ReviewPromptService";
 import TipJarService from "./services/TipJarService";
+import StreakService from "./services/StreakService";
 import { STORAGE_KEYS } from "./config/monetization";
 
 const NOTIFS_ENABLED = process.env.NOTIFS_ENABLED !== 'false';
@@ -37,6 +38,8 @@ function AppContent() {
   const [remaining, setRemaining] = useState(0);          // seconds left for display
   const [showTipJar, setShowTipJar] = useState(false);
   const [tipJarTrigger, setTipJarTrigger] = useState('power_user');
+  const [streak, setStreak] = useState(0);
+  const [lifetimeSessions, setLifetimeSessions] = useState(0);
   const durations = useMemo(() => (fast ? DUR_DEV : DUR), [fast]);
 
   const endAtRef = useRef(null);           // read by interval without re-rendering
@@ -106,11 +109,20 @@ function AppContent() {
       }
     };
 
-    // Premium status loading removed for v1.0
-    // const loadPremiumStatus = async () => { ... };
+    const loadStreakStats = async () => {
+      try {
+        const stats = await StreakService.getStats();
+        setStreak(stats.streak);
+        setLifetimeSessions(stats.lifetimeSessions);
+        if (__DEV__) console.log('[App] Loaded streak stats:', stats);
+      } catch (e) {
+        if (__DEV__) console.warn('[App] Failed to load streak stats:', e);
+      }
+    };
 
     initializeApp();
     loadState();
+    loadStreakStats();
   }, [durations]);
 
   useEffect(() => {
@@ -289,6 +301,15 @@ function AppContent() {
 
         // Increment session count and check for review prompts (focus sessions only)
         if (completedPhase === "focus") {
+          // Update streak and lifetime sessions
+          const streakResult = await StreakService.recordFocusSession();
+          setStreak(streakResult.streak);
+          setLifetimeSessions(streakResult.lifetimeSessions);
+
+          if (__DEV__ && streakResult.message) {
+            console.log('[App] Streak message:', streakResult.message);
+          }
+
           const totalSessions = await ReviewPromptService.incrementTotalSessions();
 
           // Check tip jar triggers (after review prompts)
@@ -329,6 +350,11 @@ function AppContent() {
       <Text style={styles.phase}>{phase === "focus" ? "FOCUS" : "BREAK"}</Text>
       <Text style={styles.time}>{mm}:{ss}</Text>
 
+      {/* Streak counter */}
+      {streak > 0 && (
+        <Text style={styles.streak}>🔥 {streak} day streak</Text>
+      )}
+
       <Pressable style={styles.primaryBtn} onPress={onPrimary}>
         <Text style={styles.primaryText}>{primaryLabel}</Text>
       </Pressable>
@@ -347,6 +373,11 @@ function AppContent() {
       )}
 
       <View style={styles.bottomContainer}>
+        {lifetimeSessions > 0 && (
+          <Text style={styles.lifetimeSessions}>
+            {lifetimeSessions} session{lifetimeSessions === 1 ? '' : 's'} completed
+          </Text>
+        )}
         {Platform.OS === 'ios' && (
           <Pressable
             onPress={() => setShowTipJar(true)}
@@ -378,7 +409,8 @@ const styles = StyleSheet.create({
   focusBg: { backgroundColor: "#1f2329" },
   breakBg: { backgroundColor: "#0f3d3e" },
   phase: { color: "rgba(255,255,255,0.85)", letterSpacing: 4, marginBottom: 12 },
-  time: { color: "#fff", fontSize: 72, fontWeight: "200", letterSpacing: 2, marginBottom: 28 },
+  time: { color: "#fff", fontSize: 72, fontWeight: "200", letterSpacing: 2, marginBottom: 8 },
+  streak: { color: "rgba(255,255,255,0.75)", fontSize: 16, marginBottom: 20, fontWeight: "500" },
   primaryBtn: { backgroundColor: "#fff", paddingVertical: 14, paddingHorizontal: 28, borderRadius: 14, marginBottom: 10 },
   primaryText: { color: "#111", fontSize: 18, fontWeight: "700" },
   stopBtn: { paddingVertical: 10, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.3)", marginBottom: 26 },
@@ -389,6 +421,7 @@ const styles = StyleSheet.create({
   premiumText: { color: "#4CAF50", fontSize: 16, fontWeight: "600" },
   freeText: { color: "rgba(255,255,255,0.7)", fontSize: 14, fontWeight: "500" },
   bottomContainer: { position: "absolute", bottom: 20, alignItems: "center" },
+  lifetimeSessions: { color: "rgba(255,255,255,0.5)", fontSize: 13, marginBottom: 8 },
   supportButton: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   heartIcon: { marginRight: 6 },
   supportLink: { color: "rgba(255,255,255,0.6)", fontSize: 14 },

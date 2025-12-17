@@ -39,6 +39,14 @@ export const STORAGE_KEYS = {
   REVIEW_PROMPT_COUNT: '@pomodoroflow:review_prompt_count',
   VERSION_PROMPTED: '@pomodoroflow:version_prompted',
   DAILY_SESSIONS: '@pomodoroflow:daily_sessions',
+
+  // Gamification (v1.0.6)
+  STREAK_COUNT: '@pomodoroflow:streak_count',
+  STREAK_LAST_SESSION_DATE: '@pomodoroflow:streak_last_session_date',
+  LIFETIME_SESSIONS: '@pomodoroflow:lifetime_sessions',
+  ONBOARDING_COMPLETED: '@pomodoroflow:onboarding_completed',
+  DAILY_REMINDER_ENABLED: '@pomodoroflow:daily_reminder_enabled',
+  DAILY_REMINDER_TIME: '@pomodoroflow:daily_reminder_time',
 } as const;
 
 /**
