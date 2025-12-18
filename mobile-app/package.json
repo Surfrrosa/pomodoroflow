@@ -1,6 +1,6 @@
 {
   "name": "pomodoroflow-mobile",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "PomodoroFlow - A beautifully simple Pomodoro timer with freemium model. 25/5 focus technique with premium upgrade option.",
   "main": "index.js",
   "author": "Shaina Pauley",
