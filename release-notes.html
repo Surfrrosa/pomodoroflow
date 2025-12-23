@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Release Notes - PomodoroFlow</title>
+  <meta name="description" content="PomodoroFlow Release Notes - Track updates, features, and improvements to your favorite Pomodoro timer app." />
+  <link rel="canonical" href="https://pomodoroflow.app/release-notes" />
+  <meta name="theme-color" content="#0f1115" />
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon.png" />
+
+  <!-- Feather Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f1115;
+      --muted: #1a1d24;
+      --text: #e6e7ea;
+      --dim: #a1a7b3;
+      --accent: #e6462f;
+      --ring: #2a2f39;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--text);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    /* Header */
+    .release-notes-header {
+      background: linear-gradient(180deg, var(--muted), transparent), var(--muted);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius);
+      padding: 48px 32px;
+      text-align: center;
+      margin-bottom: 48px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    .release-notes-header h1 {
+      font-size: clamp(2rem, 5vw, 2.5rem);
+      color: var(--text);
+      margin: 0 0 12px;
+      font-weight: 700;
+    }
+
+    .release-notes-header p {
+      font-size: 1.125rem;
+      color: var(--dim);
+      margin: 0 auto;
+      max-width: 600px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      margin-bottom: 24px;
+    }
+
+    .back-link:hover {
+      background: var(--muted);
+      transform: translateX(-4px);
+    }
+
+    /* Releases Container */
+    .releases-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .release {
+      background: linear-gradient(180deg, var(--muted), transparent 70%), var(--muted);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      transition: all 0.3s ease;
+    }
+
+    .release:hover {
+      box-shadow: 0 15px 40px rgba(230, 70, 47, 0.15);
+      transform: translateY(-2px);
+      border-color: rgba(230, 70, 47, 0.3);
+    }
+
+    .release-header {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid var(--ring);
+    }
+
+    .release-version {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .release-date {
+      font-size: 0.875rem;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .release-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: var(--accent);
+      color: white;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .release-badge.latest {
+      background: linear-gradient(135deg, var(--accent), #ff6b54);
+      box-shadow: 0 4px 12px rgba(230, 70, 47, 0.3);
+    }
+
+    .release-section {
+      margin-bottom: 24px;
+    }
+
+    .release-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .release-section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .release-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      color: var(--accent);
+    }
+
+    .release-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2;
+    }
+
+    .release-items {
+      list-style: none;
+      padding-left: 38px;
+      margin: 0;
+    }
+
+    .release-items li {
+      position: relative;
+      padding-left: 16px;
+      margin-bottom: 10px;
+      color: var(--dim);
+      line-height: 1.6;
+    }
+
+    .release-items li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.8;
+    }
+
+    .platform-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(230, 70, 47, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(230, 70, 47, 0.3);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid var(--ring);
+      color: var(--dim);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .links a {
+      color: var(--dim);
+      margin-right: 16px;
+      transition: color 0.2s ease;
+    }
+
+    .links a:hover {
+      color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      .release-notes-header {
+        padding: 32px 20px;
+      }
+
+      .release-notes-header h1 {
+        font-size: 2rem;
+      }
+
+      .release {
+        padding: 24px;
+      }
+
+      .release-version {
+        font-size: 1.5rem;
+      }
+
+      .container {
+        padding: 24px 16px 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="release-notes-header">
+      <a href="/" class="back-link">← Back to Home</a>
+      <h1>Release Notes</h1>
+      <p>Track all updates, new features, and improvements to PomodoroFlow</p>
+    </header>
+
+    <!-- Releases -->
+    <div class="releases-container">
+
+      <!-- Version 1.0.7 -->
+      <div class="release">
+        <div class="release-header">
+          <h2 class="release-version">
+            Version 1.0.7
+            <span class="release-badge latest">Latest</span>
+          </h2>
+          <p class="release-date">December 18, 2025</p>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="gift"></i></span>
+            New Features
+          </h3>
+          <ul class="release-items">
+            <li>Introduced Tip Jar for voluntary support from users who love the app</li>
+            <li>Added ability to leave tips to support continued development</li>
+            <li>Completely optional - all core features remain free forever</li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="smartphone"></i></span>
+            Platform Updates
+          </h3>
+          <ul class="release-items">
+            <li>Tip Jar available on iOS <span class="platform-tag">iOS</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Version 1.0.6 -->
+      <div class="release">
+        <div class="release-header">
+          <h2 class="release-version">Version 1.0.6</h2>
+          <p class="release-date">December 16, 2025</p>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="zap"></i></span>
+            New Features
+          </h3>
+          <ul class="release-items">
+            <li>Added streak tracking to visualize your focus momentum</li>
+            <li>Introduced gamification elements to encourage consistent practice</li>
+            <li>Track your daily Pomodoro completion streaks</li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="trending-up"></i></span>
+            Improvements
+          </h3>
+          <ul class="release-items">
+            <li>Enhanced motivation through visual progress indicators</li>
+            <li>Improved user engagement with gentle streak reminders</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Version 1.0.5 -->
+      <div class="release">
+        <div class="release-header">
+          <h2 class="release-version">Version 1.0.5</h2>
+          <p class="release-date">December 16, 2025</p>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="heart"></i></span>
+            Improvements
+          </h3>
+          <ul class="release-items">
+            <li>Redesigned heart icon with custom deep matte red finish</li>
+            <li>Enhanced visual consistency across the app interface</li>
+            <li>Refined iconography for better brand cohesion</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Version 1.0.4 -->
+      <div class="release">
+        <div class="release-header">
+          <h2 class="release-version">Version 1.0.4</h2>
+          <p class="release-date">December 16, 2025</p>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="gift"></i></span>
+            Pricing Model
+          </h3>
+          <ul class="release-items">
+            <li>Launched "Overcast Model" - app is now free forever</li>
+            <li>Removed premium pricing - all features unlocked for everyone</li>
+            <li>Optional Tip Jar for users who want to support development</li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="users"></i></span>
+            Philosophy
+          </h3>
+          <ul class="release-items">
+            <li>Committed to accessibility - focus tools should be free for all</li>
+            <li>No paywalls, no subscriptions, no locked features</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Version 1.0.3 -->
+      <div class="release">
+        <div class="release-header">
+          <h2 class="release-version">Version 1.0.3</h2>
+          <p class="release-date">December 15, 2025</p>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="smartphone"></i></span>
+            Platform Updates
+          </h3>
+          <ul class="release-items">
+            <li>Tip Jar temporarily limited to iOS only due to billing conflicts <span class="platform-tag">iOS</span></li>
+            <li>Removed Android Tip Jar until billing integration is resolved <span class="platform-tag">Android</span></li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="shield"></i></span>
+            Privacy & Performance
+          </h3>
+          <ul class="release-items">
+            <li>Removed Firebase dependencies for improved privacy</li>
+            <li>Stubbed analytics service for future optional telemetry</li>
+            <li>Reduced app size and improved load times</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Version 1.0.2 -->
+      <div class="release">
+        <div class="release-header">
+          <h2 class="release-version">Version 1.0.2</h2>
+          <p class="release-date">October 13, 2025</p>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="tool"></i></span>
+            Bug Fixes
+          </h3>
+          <ul class="release-items">
+            <li>Removed audio background mode to comply with App Store Guideline 2.5.4</li>
+            <li>Fixed app rejection issues related to background audio capabilities</li>
+            <li>Ensured compliance with Apple's strict audio usage policies</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Version 1.0.1 -->
+      <div class="release">
+        <div class="release-header">
+          <h2 class="release-version">Version 1.0.1</h2>
+          <p class="release-date">September 28, 2025</p>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="smartphone"></i></span>
+            Platform Launch
+          </h3>
+          <ul class="release-items">
+            <li>Dual-platform launch on iOS and Android <span class="platform-tag">iOS</span> <span class="platform-tag">Android</span></li>
+            <li>Simultaneous release on App Store and Google Play</li>
+            <li>Optimized builds for both platforms</li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="tool"></i></span>
+            Technical Improvements
+          </h3>
+          <ul class="release-items">
+            <li>Downgraded React to stable version for EAS build compatibility</li>
+            <li>Fixed dependency conflicts in build pipeline</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Version 1.0.0 -->
+      <div class="release">
+        <div class="release-header">
+          <h2 class="release-version">Version 1.0.0</h2>
+          <p class="release-date">September 27, 2025</p>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="package"></i></span>
+            Initial Release
+          </h3>
+          <ul class="release-items">
+            <li>Radically simple Pomodoro timer with zero configuration</li>
+            <li>Standard 25-minute focus / 5-minute break cycles</li>
+            <li>Gentle audio cues for session transitions</li>
+            <li>Haptic feedback for mindful notifications</li>
+            <li>Auto-progression through work and break sessions</li>
+            <li>Sessions persist even when app is closed</li>
+            <li>Local notifications to keep you on track</li>
+            <li>Fast Mode for rapid testing and QA</li>
+            <li>Dark mode interface designed for calm focus</li>
+            <li>Privacy-first: all data stored locally on device</li>
+            <li>No analytics, no tracking, fully offline capable</li>
+          </ul>
+        </div>
+
+        <div class="release-section">
+          <h3 class="release-section-title">
+            <span class="release-icon"><i data-feather="heart"></i></span>
+            Design Philosophy
+          </h3>
+          <ul class="release-items">
+            <li>Built for neurodivergent minds and ADHD-friendly focus</li>
+            <li>Zero setup friction - open app and start focusing</li>
+            <li>Gentle, nervous-system friendly notifications</li>
+            <li>Minimalist UI that fades into the background</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div>© 2025 PomodoroFlow • By Shaina Pauley</div>
+      <div class="links">
+        <a href="/">Home</a>
+        <a href="release-notes.html">Release Notes</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="mailto:shainaep@gmail.com">Contact</a>
+        <a href="press/">Press kit</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Initialize Feather icons
+    if (typeof feather !== 'undefined') {
+      feather.replace();
+    }
+  </script>
+</body>
+</html>
