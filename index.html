@@ -28,10 +28,9 @@
   <meta name="twitter:image:alt" content="PomodoroFlow - Calm, zero-friction Pomodoro timer for neurodivergents" />
 
   <!-- Favicons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon.png" />
-  <link rel="shortcut icon" href="assets/favicon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-4ZGMVWSG2V"></script>
@@ -152,9 +151,18 @@
 
       <div class="hero-visual">
         <div class="shots">
-          <img src="assets/screen-loading.png" alt="PomodoroFlow app loading screen with tomato logo" />
-          <img src="assets/screen-focus.png" alt="25-minute focus session timer in progress with dark mode interface" />
-          <img src="assets/screen-break.png" alt="5-minute break timer screen with gentle notification" />
+          <picture>
+            <source srcset="assets/screen-loading.webp" type="image/webp" />
+            <img src="assets/screen-loading.png" alt="PomodoroFlow app loading screen with tomato logo" />
+          </picture>
+          <picture>
+            <source srcset="assets/screen-focus.webp" type="image/webp" />
+            <img src="assets/screen-focus.png" alt="25-minute focus session timer in progress with dark mode interface" />
+          </picture>
+          <picture>
+            <source srcset="assets/screen-break.webp" type="image/webp" />
+            <img src="assets/screen-break.png" alt="5-minute break timer screen with gentle notification" />
+          </picture>
         </div>
       </div>
     </section>
