@@ -9,7 +9,7 @@
 
 Focus for 25 minutes, break for 5, repeat. No settings, no distractions. One tap to start, gentle chimes to guide you. Stay in your flow and let the timer handle the rest.
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Web App (Available Now)
 
@@ -30,11 +30,11 @@ Focus for 25 minutes, break for 5, repeat. No settings, no distractions. One tap
    - Timer automatically cycles through work and break sessions
    - Gentle chimes notify you of session transitions
 
-### Live Demo
+### Landing Page
 
-🌐 **[Try PomodoroFlow Web App](https://pomodoroflow-brown.vercel.app/)**
+ **[Visit the landing page](https://pomodoroflow-brown.vercel.app/)**
 
-## 📱 Mobile App (Production Ready)
+##  Mobile App (Production Ready)
 
 Native iOS and Android app with premium monetization, notifications, and background timer support.
 
@@ -49,25 +49,25 @@ npm install && npx expo start
 
 Scan QR code with Expo Go app on your device.
 
-## ✨ Core Features
+##  Core Features
 
-- **🎯 Zero Configuration** - No settings, just pure focus
-- **⏱️ Standard Pomodoro** - 25min work → 5min break cycles
-- **📱 Native Mobile** - iOS & Android with background notifications
-- **🔊 Gentle Audio Cues** - Soft chimes for session transitions
-- **📊 Session Tracking** - Visual progress indicators
-- **💎 Premium Monetization** - Freemium model with $4.99 upgrade
+- ** Zero Configuration** - No settings, just pure focus
+- ** Standard Pomodoro** - 25min work → 5min break cycles
+- ** Native Mobile** - iOS & Android with background notifications
+- ** Gentle Audio Cues** - Soft chimes for session transitions
+- ** Session Tracking** - Visual progress indicators
+- ** Premium Monetization** - Freemium model with $4.99 upgrade
 - **♿ Accessibility Ready** - VoiceOver/TalkBack support
 
-## 📱 Platform Support
+##  Platform Support
 
 | Platform | Status | Features |
 |----------|--------|----------|
-| **iOS** | ✅ Production | Notifications, haptics, background timer |
-| **Android** | ✅ Production | Notifications, haptics, background timer |
-| **Web** | ✅ Demo | Basic timer functionality |
+| **iOS** | Production | Notifications, haptics, background timer |
+| **Android** | Production | Notifications, haptics, background timer |
+| **Web** | Demo | Basic timer functionality |
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 **Mobile App (Primary)**
 - **Framework**: Expo 53 + React Native 0.79
@@ -83,7 +83,7 @@ Scan QR code with Expo Go app on your device.
 - **Audio**: Web Audio API
 - **Architecture**: Single-page application
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 pomodoroflow/
@@ -102,7 +102,7 @@ pomodoroflow/
 └── styles.css            # Web app styling
 ```
 
-## 🎯 Development
+## Development
 
 ### Prerequisites
 - Node.js 18+
@@ -129,14 +129,14 @@ npm test           # Unit tests
 npm run test:e2e   # End-to-end tests (coming soon)
 ```
 
-## 📊 Codebase Stats
+## Codebase Stats
 
 - **Total Lines**: ~980 (staying lean!)
 - **Core Logic**: ~650 lines
 - **Test Coverage**: 65%+ target
 - **Dependencies**: 13 essential packages
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create feature branch (`git checkout -b feature/focus-enhancement`)
@@ -150,14 +150,14 @@ npm run test:e2e   # End-to-end tests (coming soon)
 - Test on real devices for notifications
 - Follow accessibility best practices
 
-## 📄 Documentation
+## Documentation
 
 - **[Architecture Overview](docs/architecture-one-pager.md)** - System design and patterns
 - **[Development Runbook](docs/runbook.md)** - EAS builds, deployment, debugging
 - **[Accessibility Checklist](docs/a11y-checklist.md)** - VoiceOver, TalkBack compliance
 - **[Lean Development](docs/LEAN_DEVELOPMENT.md)** - Code philosophy and guidelines
 
-## 🔐 Privacy & Security
+## Privacy & Security
 
 PomodoroFlow is privacy-first:
 - **No data collection** - Everything stays on your device
@@ -167,7 +167,7 @@ PomodoroFlow is privacy-first:
 
 See [Security Policy](SECURITY.md) for details.
 
-## 📱 App Store Status
+## App Store Status
 
 **Current Status**: Development
 **Target**: TestFlight/Play Store Beta Q1 2024
@@ -179,16 +179,16 @@ See [Security Policy](SECURITY.md) for details.
 - [ ] Comprehensive testing
 - [ ] App Store assets
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Inspired by the [Pomodoro Technique](https://francescocirillo.com/pages/pomodoro-technique) by Francesco Cirillo.
 
 Built with ❤️ for focused productivity and flow states.
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Stay focused. Stay productive. Stay in your flow.** 🍅✨
+**Stay focused. Stay productive. Stay in your flow.** 
