@@ -1,4 +1,4 @@
-# 🏗️ PomodoroFlow Architecture
+# PomodoroFlow Architecture
 
 > **One-page overview of system design and patterns**
 
@@ -21,20 +21,20 @@ graph TD
 
 ## Core Components
 
-### 🕰️ TimerService (`/services/TimerService.js`)
+### TimerService (`/services/TimerService.js`)
 **Role**: Central timer logic and state management
 - **State**: Current phase (work/break), elapsed time, session count
 - **Methods**: start(), pause(), reset(), complete()
 - **Events**: onTick, onPhaseChange, onSessionComplete
 - **Persistence**: Saves state to AsyncStorage on changes
 
-### 📱 App.js
+### App.js
 **Role**: Main application container and state coordinator
 - **Responsibilities**: Navigation, global state, notification permissions
 - **Patterns**: React Context for timer state sharing
 - **Lifecycle**: Handles app foreground/background transitions
 
-### 🎛️ Component Layer
+### Component Layer
 **Pattern**: Presentational components with clear separation of concerns
 
 | Component | Purpose | Props | State |

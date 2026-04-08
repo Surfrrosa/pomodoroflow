@@ -7,16 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.3] - 2025-XX-XX (Current - In Development)
+## [1.0.3] - 2025-12-15 (Current - In Development)
 
 ### Added
 - **Tip Jar System**: Optional donation support ($1.99/$4.99/$9.99) with empathetic timing
-  - Power User trigger (25 sessions): "You're crushing it! 🙏"
-  - 30-Day Anniversary trigger (with 15+ sessions): "One month together! 🎉"
+  - Power User trigger (25 sessions): "You're crushing it!"
+  - 30-Day Anniversary trigger (with 15+ sessions): "One month together!"
   - Maximum 3 modal prompts (lifetime) - never feels pushy
   - 7-day cooldown after review prompts (never stacks)
   - After 2 dismissals, never shows modal again
-  - Always accessible via "💙 Support this app" link on main screen
+  - Always accessible via "Support this app" link on main screen
 - **Firebase Analytics**: Real Firebase Analytics implementation (replaced console.log stubs)
   - Full event tracking for conversions
   - Tip jar donation tracking (amount, trigger, value, currency)
@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.2] - 2025-XX-XX (Production Ready)
+## [1.0.2] - 2025-09-27 (Production Ready)
 
 ### Added
 - **Freemium Model**: New users get 7-day grace period, then 8 sessions/day limit
@@ -90,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.1] - 2025-XX-XX
+## [1.0.1] - 2025-08-11
 
 ### Fixed
 - Minor bug fixes
@@ -99,7 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.0] - 2025-XX-XX (Initial Release)
+## [1.0.0] - 2025-08-10 (Initial Release)
 
 ### Added
 - **Core Pomodoro Timer**: 25-minute focus / 5-minute break intervals
@@ -219,11 +219,7 @@ To all our existing users - thank you for your support. This update doesn't chan
 
 ## Links
 
-- **App Store:** [Add link]
-- **Play Store:** [Add link]
-- **Privacy Policy:** [Add link]
-- **Terms of Use:** [Add link]
-- **Support:** [Add email]
+- **Privacy Policy:** https://pomodoroflow.app/privacy
 
 ---
 

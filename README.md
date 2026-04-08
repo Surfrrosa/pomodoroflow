@@ -1,194 +1,81 @@
-# 🍅 PomodoroFlow
+# PomodoroFlow
 
-> **A radically simple Pomodoro timer for focus**
+A simple Pomodoro timer. 25 minutes on, 5 minutes off. One tap to start.
 
-[![Expo](https://img.shields.io/badge/Expo-53.0-blue.svg)](https://expo.dev/)
-[![React Native](https://img.shields.io/badge/React%20Native-0.79-blue.svg)](https://reactnative.dev/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![GitHub Actions](https://img.shields.io/badge/CI-GitHub%20Actions-orange.svg)](../../actions)
+## Mobile App
 
-Focus for 25 minutes, break for 5, repeat. No settings, no distractions. One tap to start, gentle chimes to guide you. Stay in your flow and let the timer handle the rest.
-
-##  Quick Start
-
-### Web App (Available Now)
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Surfrrosa/pomodoroflow.git
-   cd pomodoroflow
-   ```
-
-2. **Open in browser**:
-   ```bash
-   open index.html
-   # or simply double-click index.html
-   ```
-
-3. **Start focusing**:
-   - Click the **START** button or press **Spacebar**
-   - Timer automatically cycles through work and break sessions
-   - Gentle chimes notify you of session transitions
-
-### Landing Page
-
- **[Visit the landing page](https://pomodoroflow-brown.vercel.app/)**
-
-##  Mobile App (Production Ready)
-
-Native iOS and Android app with premium monetization, notifications, and background timer support.
-
-### Quick Start
+Native iOS and Android app built with Expo. Notifications, haptics, background timer, tip jar.
 
 ```bash
-# Clone and run
-git clone https://github.com/Surfrrosa/pomodoroflow.git
-cd pomodoroflow/mobile-app
+cd mobile-app
 npm install && npx expo start
 ```
 
-Scan QR code with Expo Go app on your device.
+Scan the QR code with Expo Go on your device.
 
-##  Core Features
+### Tech Stack
 
-- ** Zero Configuration** - No settings, just pure focus
-- ** Standard Pomodoro** - 25min work → 5min break cycles
-- ** Native Mobile** - iOS & Android with background notifications
-- ** Gentle Audio Cues** - Soft chimes for session transitions
-- ** Session Tracking** - Visual progress indicators
-- ** Premium Monetization** - Freemium model with $4.99 upgrade
-- **♿ Accessibility Ready** - VoiceOver/TalkBack support
+- **Framework:** Expo 54 + React Native 0.81
+- **Language:** JavaScript
+- **Storage:** AsyncStorage
+- **Notifications:** Expo Notifications (local scheduling)
+- **Audio:** Expo AV
 
-##  Platform Support
+## Landing Page
 
-| Platform | Status | Features |
-|----------|--------|----------|
-| **iOS** | Production | Notifications, haptics, background timer |
-| **Android** | Production | Notifications, haptics, background timer |
-| **Web** | Demo | Basic timer functionality |
+Static site deployed on Vercel: [pomodoroflow-brown.vercel.app](https://pomodoroflow-brown.vercel.app/)
 
-##  Tech Stack
-
-**Mobile App (Primary)**
-- **Framework**: Expo 53 + React Native 0.79
-- **Language**: JavaScript (TypeScript migration in progress)
-- **Navigation**: Stack-based navigation
-- **Storage**: AsyncStorage for persistence
-- **Notifications**: Expo Notifications with local scheduling
-- **Audio**: Expo AV for native sound playbook
-- **Testing**: Jest + React Native Testing Library
-
-**Web App (Demo)**
-- **Frontend**: Pure HTML5, CSS3, JavaScript ES6+
-- **Audio**: Web Audio API
-- **Architecture**: Single-page application
+```bash
+open index.html
+```
 
 ## Project Structure
 
 ```
 pomodoroflow/
-├── mobile-app/              # React Native Expo app
-│   ├── App.js              # Main app component
-│   ├── components/         # UI components
-│   │   ├── Timer.js       # Timer display
-│   │   ├── Controls.js    # Start/pause/reset buttons
-│   │   └── SessionIndicator.js # Progress dots
-│   ├── services/          # Business logic
-│   │   └── TimerService.js # Core timer logic
-│   └── __tests__/         # Test files
-├── docs/                  # Documentation
-├── index.html            # Web demo
-├── script.js             # Web app logic
-└── styles.css            # Web app styling
+  mobile-app/
+    App.js                  Main app component
+    components/
+      SplashScreen.tsx      Loading screen
+      TipJarModal.tsx       Tip jar UI
+    services/
+      AnalyticsService.js   Analytics (stub)
+      ReviewPromptService.js  App Store review prompts
+      StreakService.js       Session streak tracking
+      TipJarService.js       In-app tip jar logic
+    config/                  App configuration
+    __tests__/               Jest tests
+  index.html                Landing page
+  404.html                  Custom 404
+  privacy.html              Privacy policy
+  release-notes.html        Release notes
+  docs/                     Architecture, runbook, a11y checklist
+  press/                    Press kit images
 ```
 
-## Development
+## Commands
 
-### Prerequisites
-- Node.js 18+
-- Expo CLI
-- iOS Simulator or Android Emulator (optional)
-
-### Commands
-```bash
-# Development
-npm run start      # Start Expo dev server
-npm run ios        # Open iOS simulator
-npm run android    # Open Android emulator
-npm run test       # Run tests
-
-# Production
-npm run build:ios     # Build for iOS App Store
-npm run build:android # Build for Google Play
-```
-
-### Testing
 ```bash
 cd mobile-app
-npm test           # Unit tests
-npm run test:e2e   # End-to-end tests (coming soon)
+npm start          # Expo dev server
+npm run ios        # iOS simulator
+npm run android    # Android emulator
+npm test           # Jest tests
+npm run lint       # ESLint
 ```
-
-## Codebase Stats
-
-- **Total Lines**: ~980 (staying lean!)
-- **Core Logic**: ~650 lines
-- **Test Coverage**: 65%+ target
-- **Dependencies**: 13 essential packages
-
-## Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/focus-enhancement`)
-3. Follow the [lean development principles](docs/LEAN_DEVELOPMENT.md)
-4. Ensure tests pass (`npm test`)
-5. Submit pull request
-
-### Development Guidelines
-- Maintain "radical simplicity" principle
-- Keep total codebase under 2,000 lines
-- Test on real devices for notifications
-- Follow accessibility best practices
 
 ## Documentation
 
-- **[Architecture Overview](docs/architecture-one-pager.md)** - System design and patterns
-- **[Development Runbook](docs/runbook.md)** - EAS builds, deployment, debugging
-- **[Accessibility Checklist](docs/a11y-checklist.md)** - VoiceOver, TalkBack compliance
-- **[Lean Development](docs/LEAN_DEVELOPMENT.md)** - Code philosophy and guidelines
+- [Architecture](docs/architecture-one-pager.md)
+- [Development Runbook](docs/runbook.md)
+- [Accessibility Checklist](docs/a11y-checklist.md)
+- [Lean Development](docs/LEAN_DEVELOPMENT.md)
+- [Privacy Policy](docs/PRIVACY_POLICY.md)
 
-## Privacy & Security
+## Privacy
 
-PomodoroFlow is privacy-first:
-- **No data collection** - Everything stays on your device
-- **No analytics** - No tracking or telemetry
-- **Local storage only** - AsyncStorage for session history
-- **No network requests** - Fully offline capable
-
-See [Security Policy](SECURITY.md) for details.
-
-## App Store Status
-
-**Current Status**: Development
-**Target**: TestFlight/Play Store Beta Q1 2024
-
-- [x] Core timer functionality
-- [x] Mobile notifications
-- [x] Basic accessibility
-- [ ] TypeScript migration
-- [ ] Comprehensive testing
-- [ ] App Store assets
-
-## Acknowledgments
-
-Inspired by the [Pomodoro Technique](https://francescocirillo.com/pages/pomodoro-technique) by Francesco Cirillo.
-
-Built with ❤️ for focused productivity and flow states.
+Everything stays on your device. No accounts, no cloud sync. The landing page uses Google Analytics and Vercel Analytics for traffic. The mobile app does not collect or transmit any data.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-**Stay focused. Stay productive. Stay in your flow.** 
+MIT License. See [LICENSE](LICENSE).

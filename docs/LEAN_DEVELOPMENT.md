@@ -1,17 +1,17 @@
-# 🎯 Lean Development Principles - PomodoroFlow
+# Lean Development Principles - PomodoroFlow
 
 ## Current Codebase: ~980 lines
 **Target: Stay under 2,000 lines total (including tests)**
 
 ## Lean Philosophy
 
-### ✅ What We Keep Minimal
+### What We Keep Minimal
 - **Core Logic**: Single-purpose, focused timer functionality
 - **Dependencies**: Only essential packages (already good at 13 deps)
 - **UI Complexity**: Clean, simple interface without feature bloat
 - **Configuration**: Zero-config approach (true to Pomodoro principle)
 
-### 📏 Line Budget Guidelines
+### Line Budget Guidelines
 
 | Category | Current | Budget | Notes |
 |----------|---------|--------|-------|
@@ -21,13 +21,13 @@
 | **Build/Config** | ~120 lines | 200 lines | CI, TypeScript, Expo config |
 | **Total Budget** | 980 lines | **1,800 lines** | Professional yet lean |
 
-### 🚫 Anti-Patterns to Avoid
+### Anti-Patterns to Avoid
 - **Feature Creep**: No themes, complex settings, or social features
 - **Over-Engineering**: No complex state machines or unnecessary abstractions
 - **Verbose Tests**: Focus on behavior, not implementation details
 - **Documentation Bloat**: Essential info only, no tutorials
 
-### ✅ Quality Additions (Worth the Lines)
+### Quality Additions (Worth the Lines)
 - **TypeScript**: +~100 lines of types (better DX, fewer bugs)
 - **Accessibility**: +~50 lines (moral/legal requirement)
 - **Error Boundaries**: +~30 lines (production stability)

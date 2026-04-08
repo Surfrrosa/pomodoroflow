@@ -11,22 +11,22 @@ PomodoroFlow is designed with privacy as a core principle. We believe your focus
 
 **We collect NO personal information whatsoever:**
 
-- ❌ No email addresses or account registration
-- ❌ No usage analytics or telemetry
-- ❌ No crash reports or error logging
-- ❌ No location data
-- ❌ No device identifiers
-- ❌ No network requests (app works fully offline)
-- ❌ No third-party tracking or advertising SDKs
+- No email addresses or account registration
+- No usage analytics or telemetry
+- No crash reports or error logging
+- No location data
+- No device identifiers
+- No network requests (app works fully offline)
+- No third-party tracking or advertising SDKs
 
 ## Information Stored Locally
 
 **The following data is stored only on your device:**
 
-- ✅ Timer session preferences (focus/break durations)
-- ✅ Session completion history for progress tracking
-- ✅ Premium purchase status (via App Store receipt)
-- ✅ Daily session counts for free tier limiting
+- Timer session preferences (focus/break durations)
+- Session completion history for progress tracking
+- Premium purchase status (via App Store receipt)
+- Daily session counts for free tier limiting
 
 **Storage Method:** iOS AsyncStorage (sandboxed to PomodoroFlow only)
 

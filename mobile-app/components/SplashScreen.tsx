@@ -85,7 +85,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         {/* App icon/logo */}
         <View style={styles.logoCircle}>
           <View style={styles.logoInner}>
-            <Text style={styles.logoText}>🍅</Text>
+            <Text style={styles.logoText}>P</Text>
           </View>
         </View>
 

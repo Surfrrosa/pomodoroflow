@@ -174,4 +174,10 @@ auth-config.json
 
 # System files
 .DS_Store
+._*
 Thumbs.db
+
+# Build artifacts
+*.ipa
+*.apk
+*.aab

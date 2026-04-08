@@ -2,14 +2,14 @@
 
 **Version:** 1.0.2 (Production Ready)
 **Platform:** iOS & Android (React Native with Expo)
-**License:** Proprietary
+**License:** MIT
 **Developer:** Shaina Pauley
 
 ---
 
 ## Overview
 
-PomodoroFlow is a beautifully simple Pomodoro timer app that helps users focus with the proven 25/5 technique. Built with radical simplicity in mind - just tap Start and flow.
+PomodoroFlow is a simple Pomodoro timer app that helps users focus with the proven 25/5 technique. Built with radical simplicity in mind - just tap Start and flow.
 
 **Tagline:** *Radical simplicity - 25/5 on loop.*
 
@@ -276,23 +276,23 @@ Optional donation system that respects user attention and never feels pushy.
 ### Triggers
 
 1. **Power User** (25 completed sessions)
-   - "You're crushing it! 🙏"
+   - "You're crushing it!"
    - Recognizes heavy users who get value
 
 2. **30-Day Anniversary** (with 15+ sessions)
-   - "One month together! 🎉"
+   - "One month together!"
    - Celebrates sustained usage
 
 ### Donation Tiers
 
-- **Coffee** ☕ - $1.99 (Small thanks)
-- **Lunch** 🍜 - $4.99 (Big thanks)
-- **Supporter** 🎉 - $9.99 (Huge thanks)
+- **Coffee** - $1.99 (Small thanks)
+- **Lunch** - $4.99 (Big thanks)
+- **Supporter** - $9.99 (Huge thanks)
 
 ### Always-Available Access
 
 Users can always access the tip jar via:
-- "💙 Support this app" link at bottom of main screen
+- "Support this app" link at bottom of main screen
 - Settings screen (if added in future)
 
 ### Product IDs
@@ -527,28 +527,6 @@ eas submit --platform android
 - State persistence
 - Analytics tracking
 - Splash screen
-
----
-
-## Contributing
-
-This is a proprietary project. For bug reports or feature requests, contact the developer.
-
----
-
-## Support
-
-**Developer:** Shaina Pauley
-**Email:** [Add support email]
-**Website:** [Add website URL]
-
----
-
-## License
-
-Copyright © 2025 Shaina Pauley. All rights reserved.
-
-This is proprietary software. Unauthorized copying, distribution, or modification is prohibited.
 
 ---
 

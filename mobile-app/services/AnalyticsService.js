@@ -7,7 +7,7 @@
  * This stub ensures the app doesn't crash when analytics events are logged.
  * All methods are no-ops that only log to console in development.
  *
- * TODO: Implement real Firebase Analytics in v1.0.4
+ * Replace with real analytics when needed.
  */
 class AnalyticsService {
   /**
