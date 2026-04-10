@@ -7,49 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.3] - 2025-12-15 (Current - In Development)
+## [1.0.7] - 2026-03-29 (Current)
+
+### Changed
+- Expo updated to 54.0.30 for build compatibility
+- Removed metro.config.js (was causing build issues)
+- Gutted dead files, stripped stray emojis, rewrote README
+- SEO audit fixes: meta tags, 404 page, WebP images, favicons, manifest
+- Added Vercel Analytics to website pages
+- Release notes page added
+
+---
+
+## [1.0.6] - 2026-01
+
+### Added
+- **Streak tracking**: Daily streak counter and lifetime session count
+- **Gamification storage keys**: streak count, last session date, lifetime sessions
+
+---
+
+## [1.0.5] - 2026-01
+
+### Changed
+- Custom deep matte red heart icon for Support button
+- Support button hidden on Android (tip jar is iOS-only)
+
+---
+
+## [1.0.4] - 2025-12
+
+### Changed
+- **Overcast Model**: Removed all premium/paywall features. App is completely free forever, tip jar only.
+- Removed RevenueCat, FreemiumService, SessionTrackingService, UpgradePrompt
+- Removed session limits and grace period
+- Fixed review prompt trigger bugs (3 critical)
+- Enabled iOS tip jar AND Android builds (no more trade-offs)
+
+---
+
+## [1.0.3] - 2025-12-15
 
 ### Added
 - **Tip Jar System**: Optional donation support ($1.99/$4.99/$9.99) with empathetic timing
-  - Power User trigger (25 sessions): "You're crushing it!"
-  - 30-Day Anniversary trigger (with 15+ sessions): "One month together!"
-  - Maximum 3 modal prompts (lifetime) - never feels pushy
-  - 7-day cooldown after review prompts (never stacks)
+  - Power User trigger (25 sessions)
+  - 30-Day Anniversary trigger (with 15+ sessions)
+  - Maximum 3 modal prompts (lifetime), 7-day cooldown after review prompts
   - After 2 dismissals, never shows modal again
   - Always accessible via "Support this app" link on main screen
-- **Firebase Analytics**: Real Firebase Analytics implementation (replaced console.log stubs)
-  - Full event tracking for conversions
-  - Tip jar donation tracking (amount, trigger, value, currency)
-  - Enhanced monetization analytics
-- **TipJarModal Component**: Beautiful donation UI with 3 tiers
-- **TipJarService**: Comprehensive timing and tracking logic
+- **TipJarModal Component**: Donation UI with 3 tiers
+- **TipJarService**: Timing and tracking logic
 
 ### Changed
-- Updated version to 1.0.3 in app.json
-- Enhanced AnalyticsService with real Firebase Analytics SDK
-- Added Firebase plugin to app configuration
-- Improved documentation accuracy (README, CHANGELOG)
+- Firebase removed (deferred indefinitely). AnalyticsService is a console.log stub.
 
 ### Fixed
-- **Critical**: Missing VERSION_PROMPTED storage key (would crash ReviewPromptService)
-- **Critical**: Typo in TipJarService (getShownCount had space in method name)
+- Missing VERSION_PROMPTED storage key (would crash ReviewPromptService)
+- Typo in TipJarService (getShownCount had space in method name)
 
 ### Removed
-- **28 unused dependencies** (~20MB bundle size reduction):
-  - canvas, react-dom, react-native-web
-  - Various duplicate/unused packages
-- **Dead code files**:
-  - components/PremiumApp.js (unused wrapper)
-  - types/timer.ts (unused TypeScript definitions)
-
-### Technical Details
-- **New Dependencies**:
-  - `expo-in-app-purchases` - Tip jar donations
-  - `@react-native-firebase/app@21.8.1` - Firebase core
-  - `@react-native-firebase/analytics@21.8.1` - Real analytics
-- **New Services**: TipJarService.js
-- **New Components**: TipJarModal.tsx
-- **Configuration**: Added tip jar product IDs to monetization.ts
+- 28 unused dependencies (~20MB bundle size reduction)
+- Dead code: PremiumApp.js, timer.ts
+- Firebase dependencies
 
 ---
 
@@ -122,105 +141,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## Release Notes Template (For App Store Submissions)
-
-### v1.0.2 Release Notes
-
-**New in This Version:**
-
-We've added a premium upgrade option to support continued development while keeping the core app experience free.
-
-**What's New:**
-- 7-day free trial for new users (unlimited sessions)
-- Free tier: 8 Pomodoro sessions per day
-- Premium: Unlimited sessions ($4.99 one-time purchase)
-- Existing users: You're grandfathered - unlimited sessions forever!
-- App review prompts: Help us grow by rating the app
-
-**Still Free & Simple:**
-- Beautiful 25/5 Pomodoro timer
-- Background timer support
-- Sound and haptic feedback
-- No subscriptions, no recurring fees
-
-**Thank You:**
-To all our existing users - thank you for your support. This update doesn't change anything for you. You'll continue to have unlimited access, always.
-
----
-
-## Versioning Strategy
-
-**Major version (X.0.0)**: Breaking changes, major features
-**Minor version (1.X.0)**: New features, backwards compatible
-**Patch version (1.0.X)**: Bug fixes, minor improvements
-
----
-
-## Upgrade Notes
-
-### Migrating from v1.0.1 to v1.0.2
-
-**For Developers:**
-- Install new dependencies: `npm install`
-- Review `config/monetization.ts` for settings
-- Configure RevenueCat account and API keys
-- Set up IAP products in App Store Connect / Google Play Console
-- Test purchase flow in sandbox environment
-
-**For Users:**
-- Existing users: No changes, unlimited sessions forever
-- New users: 7-day grace period, then 8 sessions/day limit
-- Premium option available via in-app purchase
-
----
-
-## Known Issues
-
-### v1.0.2
-- None currently known
-
-### Previous Versions
-- v1.0.0: Notification scheduling could duplicate on rapid pause/resume (fixed in v1.0.1)
-
----
-
-## Future Roadmap
-
-### v1.0.4 (Planned - Quality Improvements)
-- Migrate App.js to TypeScript
-- Add comprehensive unit tests
-- Add error telemetry (Sentry)
-- Performance monitoring
-- A/B testing infrastructure
-
-### v1.1.0 (Planned - Feature Expansion)
-- Custom timer durations (user-configurable 25/5)
-- Session history and statistics
-- Long break support (every 4 Pomodoros)
-- Premium themes and sounds
-- Focus goals and streaks
-
-### v1.2.0 (Planned - Advanced Features)
-- Session analytics dashboard
-- Productivity insights
-- Export session data
-- Multiple timer profiles
-- Widget support (iOS 14+)
-
----
-
-## Credits
-
-**Developer:** Shaina Pauley
-**Design:** Minimalist design philosophy
-**Inspiration:** The Pomodoro Technique by Francesco Cirillo
-
----
-
-## Links
-
-- **Privacy Policy:** https://pomodoroflow.app/privacy
-
----
-
-**Last Updated:** v1.0.2 Release
+**Last Updated:** v1.0.7
