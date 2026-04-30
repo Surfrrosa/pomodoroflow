@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
   <title>PomodoroFlow - Pomodoro Timer App for ADHD & Neurodivergents | Free Focus Timer</title>
   <meta name="description" content="Free Pomodoro timer app designed for ADHD and neurodivergent minds. Simple 25/5 focus sessions with gentle notifications. No signup, no distractions. Available on iOS & Android." />
   <meta name="keywords" content="pomodoro timer, ADHD timer, neurodivergent productivity, focus timer, pomodoro app, ADHD productivity, time management, work timer, study timer, productivity app" />
@@ -89,6 +90,14 @@
     @media (max-width: 880px) {
       .hero { grid-template-columns: 1fr; }
       .features { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 
