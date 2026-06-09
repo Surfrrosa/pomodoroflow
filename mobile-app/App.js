@@ -355,11 +355,23 @@ function AppContent() {
         <Text style={styles.streak}>🔥 {streak} day streak</Text>
       )}
 
-      <Pressable style={styles.primaryBtn} onPress={onPrimary}>
+      <Pressable
+        style={styles.primaryBtn}
+        onPress={onPrimary}
+        accessibilityRole="button"
+        accessibilityLabel={primaryLabel}
+      >
         <Text style={styles.primaryText}>{primaryLabel}</Text>
       </Pressable>
 
-      <Pressable style={styles.stopBtn} onPress={onStop} disabled={!phaseEndAt}>
+      <Pressable
+        style={styles.stopBtn}
+        onPress={onStop}
+        disabled={!phaseEndAt}
+        accessibilityRole="button"
+        accessibilityLabel="Stop timer"
+        accessibilityState={{ disabled: !phaseEndAt }}
+      >
         <Text style={styles.stopText}>Stop</Text>
       </Pressable>
 
@@ -382,6 +394,8 @@ function AppContent() {
           <Pressable
             onPress={() => setShowTipJar(true)}
             style={styles.supportButton}
+            accessibilityRole="button"
+            accessibilityLabel="Support PomodoroFlow"
           >
             <Ionicons name="heart" size={16} color="#8B1A1A" style={styles.heartIcon} />
             <Text style={styles.supportLink}>Support PomodoroFlow</Text>
