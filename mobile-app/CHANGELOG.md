@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.7] - 2026-03-29 (Current)
+## [Unreleased]
+
+### Added
+- **Error telemetry via Sentry.** Production-silent catches across the
+  IAP purchase flow, app initialization, notification scheduling,
+  streak service, and review-prompt service now report exceptions to
+  Sentry instead of disappearing. The tip jar purchase flow also emits
+  step-by-step breadcrumbs (connect / getProducts / purchaseItem) and
+  captures the StoreKit error code, so the next time anyone hits the
+  "Oops!" path we'll see what actually failed.
+- `services/ErrorReporter.js` wrapper — components and services never
+  import `@sentry/react-native` directly. Init is gated on `!__DEV__`
+  and an empty DSN is a no-op, so local dev console paths still work.
+- DSN is read from `app.json` `extra.sentryDsn`. Paste a real DSN
+  there before the next prod build to activate.
+
+---
+
+## [1.0.7] - 2026-03-29
 
 ### Changed
 - Expo updated to 54.0.30 for build compatibility
