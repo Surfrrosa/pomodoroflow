@@ -13,6 +13,7 @@ import AnalyticsService from "./services/AnalyticsService";
 import ReviewPromptService from "./services/ReviewPromptService";
 import TipJarService from "./services/TipJarService";
 import StreakService from "./services/StreakService";
+import * as ErrorReporter from "./services/ErrorReporter";
 import { STORAGE_KEYS } from "./config/monetization";
 
 const NOTIFS_ENABLED = process.env.NOTIFS_ENABLED !== 'false';
@@ -72,6 +73,7 @@ function AppContent() {
         if (__DEV__) console.log('[NOTIF] Permissions status:', status);
       } catch (e) {
         if (__DEV__) console.warn("Failed to initialize notifications:", e);
+        ErrorReporter.captureException(e, { where: 'initializeApp' });
       }
     };
 
@@ -106,6 +108,7 @@ function AppContent() {
         }
       } catch (e) {
         if (__DEV__) console.warn("Failed to load state:", e);
+        ErrorReporter.captureException(e, { where: 'loadState' });
       }
     };
 
@@ -117,6 +120,7 @@ function AppContent() {
         if (__DEV__) console.log('[App] Loaded streak stats:', stats);
       } catch (e) {
         if (__DEV__) console.warn('[App] Failed to load streak stats:', e);
+        ErrorReporter.captureException(e, { where: 'loadStreakStats' });
       }
     };
 
@@ -134,6 +138,7 @@ function AppContent() {
         soundRef.current = sound;
       } catch (e) {
         if (__DEV__) console.warn("Chime not loaded. Add assets/chime.mp3", e?.message);
+        ErrorReporter.captureException(e, { where: 'loadChime' });
       }
     })();
     return () => soundRef.current?.unloadAsync();
@@ -179,6 +184,7 @@ function AppContent() {
         if (__DEV__) console.log('[NOTIF] Cancelled notification:', notificationIdRef.current);
       } catch (e) {
         if (__DEV__) console.warn('[NOTIF] Failed to cancel notification:', e);
+        ErrorReporter.captureException(e, { where: 'cancelNotification' });
       }
       notificationIdRef.current = null;
     }
@@ -215,6 +221,7 @@ function AppContent() {
       return id;
     } catch (e) {
       if (__DEV__) console.warn('[NOTIF] Failed to schedule notification:', e);
+      ErrorReporter.captureException(e, { where: 'scheduleOnce', endTime, label });
       return null;
     }
   };
@@ -230,7 +237,10 @@ function AppContent() {
 
   const saveState = async (p, end) => {
     try { await AsyncStorage.setItem(STORAGE_KEYS.TIMER_STATE, JSON.stringify({ phase: p, phaseStartAt: Date.now(), phaseEndAt: end })); }
-    catch (e) { if (__DEV__) console.warn("Failed to save state:", e); }
+    catch (e) {
+      if (__DEV__) console.warn("Failed to save state:", e);
+      ErrorReporter.captureException(e, { where: 'saveState' });
+    }
   };
 
   const startPhase = async (next) => {

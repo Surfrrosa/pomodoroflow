@@ -2,6 +2,7 @@
 import * as StoreReview from 'expo-store-review';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AnalyticsService from './AnalyticsService';
+import * as ErrorReporter from './ErrorReporter';
 import { STORAGE_KEYS, MONETIZATION_CONFIG } from '../config/monetization';
 
 /**
@@ -59,6 +60,7 @@ class ReviewPromptService {
       return true;
     } catch (error) {
       if (__DEV__) console.warn('[Review] Error requesting review:', error);
+      ErrorReporter.captureException(error, { where: 'ReviewPromptService.requestReview', trigger });
       return false;
     }
   }
@@ -94,6 +96,7 @@ class ReviewPromptService {
       return true;
     } catch (error) {
       if (__DEV__) console.warn('[Review] Error checking eligibility:', error);
+      ErrorReporter.captureException(error, { where: 'ReviewPromptService.shouldPromptReview' });
       return false;
     }
   }
@@ -118,6 +121,7 @@ class ReviewPromptService {
       if (__DEV__) console.log(`[Review] Prompt ${newCount}/3 shown (${trigger})`);
     } catch (error) {
       if (__DEV__) console.warn('[Review] Error recording prompt:', error);
+      ErrorReporter.captureException(error, { where: 'ReviewPromptService.recordPromptShown', trigger });
     }
   }
 
@@ -143,6 +147,7 @@ class ReviewPromptService {
       return newCount;
     } catch (error) {
       if (__DEV__) console.warn('[Review] Error incrementing sessions:', error);
+      ErrorReporter.captureException(error, { where: 'ReviewPromptService.incrementTotalSessions' });
       return 0;
     }
   }
@@ -239,6 +244,7 @@ class ReviewPromptService {
       return count;
     } catch (error) {
       if (__DEV__) console.warn('[Review] Error incrementing daily sessions:', error);
+      ErrorReporter.captureException(error, { where: 'ReviewPromptService.incrementDailySessionCount' });
       return 0;
     }
   }

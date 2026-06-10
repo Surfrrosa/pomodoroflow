@@ -9,6 +9,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ErrorReporter from './ErrorReporter';
 import { STORAGE_KEYS } from '../config/monetization';
 
 class StreakService {
@@ -87,6 +88,7 @@ class StreakService {
       };
     } catch (error) {
       console.error('[Streak] Error recording session:', error);
+      ErrorReporter.captureException(error, { where: 'StreakService.recordFocusSession' });
       return { streak: 0, lifetimeSessions: 0, isNewDay: false, message: '' };
     }
   }
@@ -124,6 +126,7 @@ class StreakService {
       };
     } catch (error) {
       console.error('[Streak] Error getting stats:', error);
+      ErrorReporter.captureException(error, { where: 'StreakService.getStats' });
       return { streak: 0, lifetimeSessions: 0 };
     }
   }
