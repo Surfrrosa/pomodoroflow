@@ -53,12 +53,14 @@
             "enableProguardInReleaseBuilds": false
           }
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "extra": {
       "eas": {
         "projectId": "7e0dc02e-4012-4d53-8765-06de09aed23e"
-      }
+      },
+      "sentryDsn": ""
     },
     "owner": "shainaep"
   }
