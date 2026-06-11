@@ -397,7 +397,7 @@
 
     <!-- Footer -->
     <footer>
-      <div>© 2025 PomodoroFlow • By Shaina Pauley</div>
+      <div>© <span id="year">2026</span> PomodoroFlow • By Shaina Pauley</div>
       <div class="links">
         <a href="/">Home</a>
         <a href="release-notes.html">Release Notes</a>
@@ -413,6 +413,7 @@
     if (typeof feather !== 'undefined') {
       feather.replace();
     }
+    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
