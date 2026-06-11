@@ -18,6 +18,7 @@ import {
   Platform,
 } from 'react-native';
 import TipJarService from '../services/TipJarService';
+import * as ErrorReporter from '../services/ErrorReporter';
 import { MONETIZATION_CONFIG } from '../config/monetization';
 
 // Conditional import - only load on iOS to avoid Android billing conflicts
@@ -73,38 +74,41 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
 
   const handleTip = async (productId: string, amount: number) => {
     setPurchasing(true);
+    const iapContext = { productId, amount, trigger, platform: Platform.OS };
+    ErrorReporter.addBreadcrumb('Tip jar purchase started', 'iap', iapContext);
     try {
-      // Connect to store
+      ErrorReporter.addBreadcrumb('IAP connectAsync', 'iap');
       await InAppPurchases.connectAsync();
 
-      // Get products
+      ErrorReporter.addBreadcrumb('IAP getProductsAsync', 'iap', { productId });
       const { results } = await InAppPurchases.getProductsAsync([productId]);
 
       if (!results || results.length === 0) {
         throw new Error('Product not found');
       }
 
-      // Purchase
+      ErrorReporter.addBreadcrumb('IAP purchaseItemAsync', 'iap', { productId });
       await InAppPurchases.purchaseItemAsync(productId);
 
-      // Record donation
       await TipJarService.recordDonation(amount, trigger);
 
-      // Show thank you
       Alert.alert(
         '💚 Thank You!',
         'Your support means the world. It helps keep this app ad-free and independent.',
         [{ text: 'You\'re welcome!', onPress: onClose }]
       );
 
-      // Disconnect from store
       await InAppPurchases.disconnectAsync();
     } catch (error: any) {
-      // User cancelled
       if (error.code === 'E_USER_CANCELLED') {
         if (__DEV__) console.log('[TipJar] User cancelled purchase');
       } else {
         console.error('[TipJar] Purchase error:', error);
+        ErrorReporter.captureException(error, {
+          ...iapContext,
+          errorCode: error?.code,
+          errorMessage: error?.message,
+        });
         Alert.alert(
           'Oops!',
           'Something went wrong. No worries, you weren\'t charged.',
