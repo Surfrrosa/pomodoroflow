@@ -1,207 +1,81 @@
 # PomodoroFlow Architecture
 
-> **One-page overview of system design and patterns**
+Single-file React Native timer. All timer state lives in `mobile-app/App.js`. Wall-clock based, not interval counting. Background-reliable.
 
-## System Overview
+## State machine
 
-PomodoroFlow follows a **simple, event-driven architecture** optimized for mobile timer reliability and minimal complexity.
+Three state variables, three states:
 
-```mermaid
-graph TD
-    A[App.js] --> B[TimerService]
-    A --> C[Components]
-    B --> D[AsyncStorage]
-    B --> E[Notifications]
-    C --> F[Timer.js]
-    C --> G[Controls.js]
-    C --> H[SessionIndicator.js]
-    E --> I[Background Timer]
-    D --> J[Session History]
-```
+| Variable | Type | Meaning |
+|---|---|---|
+| `phase` | `"focus" \| "break"` | Which side of the loop |
+| `running` | `boolean` | Is the timer currently advancing |
+| `phaseEndAt` | `number \| null` | Epoch ms when current phase ends |
 
-## Core Components
+States:
 
-### TimerService (`/services/TimerService.js`)
-**Role**: Central timer logic and state management
-- **State**: Current phase (work/break), elapsed time, session count
-- **Methods**: start(), pause(), reset(), complete()
-- **Events**: onTick, onPhaseChange, onSessionComplete
-- **Persistence**: Saves state to AsyncStorage on changes
+- **IDLE** — `phaseEndAt = null`, `running = false`. Cold start, or after Stop.
+- **RUNNING** — `phaseEndAt = future epoch ms`, `running = true`. Timer is counting down.
+- **PAUSED** — `phaseEndAt` preserved, `running = false`. Timer is held.
 
-### App.js
-**Role**: Main application container and state coordinator
-- **Responsibilities**: Navigation, global state, notification permissions
-- **Patterns**: React Context for timer state sharing
-- **Lifecycle**: Handles app foreground/background transitions
+Transitions live in `App.js`:
 
-### Component Layer
-**Pattern**: Presentational components with clear separation of concerns
+- `onStart()` — IDLE → RUNNING (focus). Calls `startPhase("focus")`.
+- `onPause()` — RUNNING → PAUSED. Clears the scheduled notification; preserves `phase` and `phaseEndAt`.
+- `onResume()` — PAUSED → RUNNING. Recomputes `phaseEndAt` from the remaining time so the countdown picks up where it left off.
+- `onStop()` — any → IDLE. Clears `phaseEndAt`, resets `phase = "focus"`, removes `TIMER_STATE` from AsyncStorage.
+- **Auto-transition** — when the 250ms poll detects `Date.now() >= phaseEndAt`, fires chime + haptic, then calls `startPhase(opposite phase)`. Focus → break → focus, indefinitely.
 
-| Component | Purpose | Props | State |
-|-----------|---------|-------|-------|
-| `Timer.js` | Display countdown | `timeRemaining`, `phase` | None (pure) |
-| `Controls.js` | Start/pause/reset actions | `onStart`, `onPause`, `onReset` | Local button states |
-| `SessionIndicator.js` | Progress visualization | `currentSession`, `totalSessions` | None (pure) |
+The primary button's label is derived from this state machine (`App.js` `primaryLabel`): IDLE shows "Start", RUNNING shows "Pause", PAUSED shows "Resume".
 
-## Data Flow
+## Wall-clock timing
 
-### Timer State Machine
-```
-[IDLE] --start()--> [RUNNING] --pause()--> [PAUSED]
-   ^                    |                      |
-   |                    v                      |
-   +--reset()------ [COMPLETE] <--resume()----+
-```
+`phaseEndAt = Date.now() + durationSec * 1000` is set on start. A 250ms `setInterval` (`App.js` lines 286-335) reads `endAtRef.current` and computes `remaining = (phaseEndAt - Date.now()) / 1000` for display.
 
-### Event Flow
-1. **User Action** → Controls component
-2. **Component** → TimerService method call
-3. **TimerService** → State update + persistence
-4. **State Change** → Component re-render via Context
-5. **Background Timer** → Notification scheduling
+Why wall-clock and not interval counting: mobile OSes suspend JavaScript when the app backgrounds. Interval-based countdowns drift. Storing the absolute end-time means the elapsed-time calculation is correct whether the app was foregrounded the whole phase or backgrounded for 20 of the 25 minutes.
 
-## Storage Strategy
+## Foreground reconciliation
 
-### AsyncStorage Schema
-```javascript
-{
-  "timerState": {
-    "phase": "work|break|longBreak",
-    "timeRemaining": number,
-    "isRunning": boolean,
-    "sessionCount": number,
-    "lastUpdated": timestamp
-  },
-  "sessionHistory": [
-    {
-      "date": "2024-01-15",
-      "completedSessions": 4,
-      "totalMinutes": 120
-    }
-  ],
-  "settings": {
-    "notificationsEnabled": boolean,
-    "soundEnabled": boolean
-  }
-}
-```
+`AppState` listener (`App.js` lines 162-171) fires when the app returns from background/inactive to active. It re-computes `remaining = (phaseEndAt - Date.now()) / 1000` so the displayed countdown matches reality immediately on resume — no need to wait for the next poll tick.
 
-### Persistence Points
-- **Timer state**: On every significant change (start/pause/phase change)
-- **Session completion**: When work session finishes
-- **Daily summary**: At end of day or app close
+## AsyncStorage
 
-## Notification Architecture
+Single key for timer state: `STORAGE_KEYS.TIMER_STATE` (`'pomodoroflow_state'`), defined in `mobile-app/config/monetization.ts`. Shape: `{ phase, phaseStartAt, phaseEndAt }`. Written via `saveState()` on every start/resume; removed entirely on `onStop()`.
 
-### Local Scheduling Pattern
-```javascript
-// Schedule next notification
-await Notifications.scheduleNotificationAsync({
-  content: {
-    title: "Break time!",
-    body: "You've completed a focus session.",
-    sound: 'default'
-  },
-  trigger: {
-    seconds: timeRemaining
-  }
-});
-```
+Streak + lifetime-session counts are persisted by StreakService under its own keys (`STREAK_COUNT`, `LIFETIME_SESSIONS`, `STREAK_LAST_SESSION_DATE`, also defined in `config/monetization.ts`).
 
-### Background Handling
-- **Foreground**: UI updates via React state
-- **Background**: Notifications + background processing
-- **Restoration**: Calculate elapsed time on app resume
+## Notifications
 
-## Performance Considerations
+Single scheduled local notification per phase. On `startPhase()`, `scheduleOnce()` (`App.js` line 187) calls `expo-notifications` `scheduleNotificationAsync` with a `date` trigger at `phaseEndAt`. Content varies by next phase ("Focus time!" or "Break time!"). On `onPause()`, `onStop()`, or the next schedule, the previous notification is cancelled via `cancelNotification()`.
 
-### Timer Precision
-- **Challenge**: JavaScript timers drift over time
-- **Solution**: Track elapsed time vs. wall clock time
-- **Implementation**: Reconcile on app foreground
+A `lastScheduleKeyRef` guard prevents duplicate scheduling for the same end-time across back-to-back state changes.
 
-### Memory Management
-- **Component Optimization**: React.memo for pure components
-- **Timer Cleanup**: Clear intervals on component unmount
-- **Storage Batching**: Debounce AsyncStorage writes
+## Services
 
-### Battery Optimization
-- **Background Processing**: Minimal CPU usage
-- **Notification Scheduling**: Batch operations
-- **State Updates**: Only when necessary
+Four leaf-pure services. Each imports only `config/monetization.ts` and Expo modules; none import each other. All are consumed exclusively by `App.js`.
 
-## Accessibility Implementation
+- **AnalyticsService** (`services/AnalyticsService.js`) — Stub. `console.log` in dev, no-op in prod. Firebase was removed in v1.0.3.
+- **ReviewPromptService** (`services/ReviewPromptService.js`) — Tracks total sessions, days since install, and last prompt date. Triggers `expo-store-review` at configured milestones (10 sessions, 7 days, 8-session productive day) with a 90-day cooldown.
+- **StreakService** (`services/StreakService.js`) — Daily streak (recorded once per day on focus completion) + lifetime focus sessions. Persists to AsyncStorage with its own keys.
+- **TipJarService** (`services/TipJarService.js`) — Tip-jar trigger logic (power-user / milestone / etc.). Drives the `TipJarModal` shown after focus completion. iOS only; backed by `expo-in-app-purchases`.
 
-### Screen Reader Support
-```javascript
-<Pressable
-  accessibilityLabel="Start timer"
-  accessibilityHint="Begins 25-minute focus session"
-  accessibilityRole="button"
->
-```
+## Testing
 
-### Haptic Feedback
-- **Timer Start**: Light impact
-- **Session Complete**: Medium impact
-- **Long Break**: Heavy impact
+`mobile-app/__tests__/App.test.js` covers:
 
-### Reduced Motion
-```javascript
-const prefersReducedMotion = useAccessibilityInfo();
-const animationConfig = prefersReducedMotion
-  ? { duration: 0 }
-  : { duration: 300 };
-```
+- Smoke (renders without crash)
+- IDLE initial state (Start button visible)
+- IDLE → RUNNING transition (Start → Pause label)
+- RUNNING → PAUSED preserves phase (Pause → Resume label)
+- PAUSED → RUNNING via resume (Resume → Pause label)
+- Auto-transition focus → break when `phaseEndAt` elapses
 
-## Error Handling
+Tests use Jest + React Native Testing Library + `jest.useFakeTimers()` (configured globally in `jest-setup.js`). SplashScreen is mocked to immediately invoke `onComplete()` so the timer UI mounts in tests.
 
-### Graceful Degradation
-- **Notification Failure**: Continue with visual-only mode
-- **Storage Error**: Keep session in memory
-- **Timer Drift**: Auto-correct on app resume
+Intentionally not yet covered: notification scheduling/cancellation flow, IAP purchase flow, StreakService persistence across renders, ReviewPrompt cooldown logic. Each requires deeper mocking and would balloon the test surface; deferred to a focused integration-testing PR.
 
-### Error Boundaries
-```javascript
-<ErrorBoundary fallback={<TimerErrorScreen />}>
-  <TimerContainer />
-</ErrorBoundary>
-```
+## Why single-file
 
-## Testing Strategy
+The single-file architecture in `App.js` is intentional, not technical debt. CLAUDE.md captures it: "Radical simplicity — 25/5 on loop." A timer with two phases doesn't need a service layer.
 
-### Unit Tests
-- **TimerService**: State transitions, edge cases
-- **Utils**: Time formatting, calculation functions
-- **Storage**: AsyncStorage wrapper functions
-
-### Integration Tests
-- **Component Integration**: Timer + Controls interaction
-- **Notification Flow**: Schedule → trigger → handle
-- **State Persistence**: Save → restore → verify
-
-### E2E Tests
-- **Happy Path**: Start → complete session → break
-- **Background Flow**: Timer running → app background → notification
-- **Restoration**: Kill app → restart → verify state
-
-## Development Patterns
-
-### Code Organization
-```
-services/     # Business logic (no UI dependencies)
-components/   # UI components (no business logic)
-utils/        # Pure functions (no side effects)
-hooks/        # Custom React hooks
-types/        # TypeScript definitions (when migrated)
-```
-
-### State Management Philosophy
-- **Local State**: Component-specific UI state
-- **Context**: Timer state shared across components
-- **AsyncStorage**: Persistent data and settings
-- **Avoid**: Redux (overkill for simple timer)
-
----
-
-**Key Principle**: Keep it simple, predictable, and focused on the core timer functionality.
+The four services that DO exist (Analytics, ReviewPrompt, Streak, TipJar) are extracted because they're orthogonal to timer logic — they're side concerns that happen in response to timer events, not the timer itself.
