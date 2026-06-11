@@ -23,7 +23,7 @@ Scan the QR code with Expo Go on your device.
 
 ## Landing Page
 
-Static site deployed on Vercel: [pomodoroflow-brown.vercel.app](https://pomodoroflow-brown.vercel.app/)
+Static site deployed on Vercel: [pomodoroflow.app](https://pomodoroflow.app/)
 
 ```bash
 open index.html

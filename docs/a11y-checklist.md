@@ -23,17 +23,30 @@
   accessibilityLabel={isRunning ? "Pause timer" : "Resume timer"}
   ```
 
-- [ ] **Reset Button**: Confirmation context
+- [ ] **Stop Button**: State + action description
   ```jsx
-  accessibilityLabel="Reset timer"
-  accessibilityHint="Stops current session and returns to start"
+  accessibilityLabel="Stop timer"
+  accessibilityState={{ disabled: !phaseEndAt }}
+  accessibilityRole="button"
+  ```
+
+- [ ] **Support Button (iOS)**: Tip jar trigger
+  ```jsx
+  accessibilityLabel="Support PomodoroFlow"
+  accessibilityRole="button"
   ```
 
 ### Progress Indicators
-- [ ] **Session Dots**: Meaningful progress description
+- [ ] **Streak Counter**: Meaningful streak description
   ```jsx
-  accessibilityLabel="Session 2 of 4 complete"
-  accessibilityRole="progressbar"
+  accessibilityLabel={`${streak} day streak`}
+  accessibilityRole="text"
+  ```
+
+- [ ] **Lifetime Sessions**: Meaningful count description
+  ```jsx
+  accessibilityLabel={`${lifetimeSessions} sessions completed`}
+  accessibilityRole="text"
   ```
 
 ## Touch Targets

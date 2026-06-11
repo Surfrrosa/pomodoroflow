@@ -15,7 +15,7 @@
 
 | Category | Current | Budget | Notes |
 |----------|---------|--------|-------|
-| **Core App Logic** | ~650 lines | 800 lines | Timer, state, components |
+| **Core App Logic** | ~440 lines (App.js) + ~490 lines (components) | 1,200 lines | Timer, state, components |
 | **Testing Code** | ~210 lines | 600 lines | Comprehensive but focused tests |
 | **Documentation** | ~50 lines | 200 lines | Essential docs only |
 | **Build/Config** | ~120 lines | 200 lines | CI, TypeScript, Expo config |
