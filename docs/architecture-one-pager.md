@@ -52,12 +52,13 @@ A `lastScheduleKeyRef` guard prevents duplicate scheduling for the same end-time
 
 ## Services
 
-Four leaf-pure services. Each imports only `config/monetization.ts` and Expo modules; none import each other. All are consumed exclusively by `App.js`.
+Five leaf-pure services. Each imports only `config/monetization.ts`, Expo modules, and (where relevant) `ErrorReporter`; they never cross-import each other. All are consumed exclusively by `App.js` and `components/TipJarModal.tsx`.
 
 - **AnalyticsService** (`services/AnalyticsService.js`) — Stub. `console.log` in dev, no-op in prod. Firebase was removed in v1.0.3.
 - **ReviewPromptService** (`services/ReviewPromptService.js`) — Tracks total sessions, days since install, and last prompt date. Triggers `expo-store-review` at configured milestones (10 sessions, 7 days, 8-session productive day) with a 90-day cooldown.
 - **StreakService** (`services/StreakService.js`) — Daily streak (recorded once per day on focus completion) + lifetime focus sessions. Persists to AsyncStorage with its own keys.
-- **TipJarService** (`services/TipJarService.js`) — Tip-jar trigger logic (power-user / milestone / etc.). Drives the `TipJarModal` shown after focus completion. iOS only; backed by `expo-in-app-purchases`.
+- **TipJarService** (`services/TipJarService.js`) — Tip-jar trigger logic (power-user / milestone / etc.). Drives the `TipJarModal` shown after focus completion. Cross-platform (iOS + Android) via `expo-iap`. Trigger checks use `>=` (not `===`), so a user who blows past a threshold without a check running still gets the prompt on their next session; the `firedTriggers` guard prevents re-firing.
+- **ErrorReporter** (`services/ErrorReporter.js`) — Thin `@sentry/react-native` wrapper. DSN and `release: pomodoroflow@<version>` are read from `app.json`. `__DEV__` and empty-DSN builds are no-ops. Every `try/catch` that swallows an exception should call `ErrorReporter.captureException(err, { where: '...' })`.
 
 ## Testing
 

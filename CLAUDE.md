@@ -4,10 +4,11 @@ Simple Pomodoro timer. 25 minutes focus, 5 minutes break, one tap to start.
 
 ## Stack
 
-- Expo 54 + React Native 0.81, JavaScript
+- Expo 56 + React Native 0.85, JavaScript
 - AsyncStorage for persistence
 - Expo Notifications (local), Expo AV, Expo Haptics
-- Expo In-App Purchases (tip jar, iOS only)
+- expo-iap (tip jar, iOS + Android)
+- Sentry (error telemetry, versioned via `release: pomodoroflow@<version>`)
 - Landing page: static HTML on Vercel
 
 ## Project layout
@@ -70,3 +71,35 @@ GitHub Actions on push to main/develop and PRs to main: typecheck, lint, test wi
 ## Session logs
 
 Session logs go in `docs/sessions/`. Name format: `YYYY-MM-DD.md`.
+
+## Before writing new code
+
+This is a small, deliberately-consolidated project. Grep before you add.
+
+- **Constants + storage keys** — `mobile-app/config/monetization.ts` holds
+  every product ID, price, storage key, and feature flag. Don't hardcode
+  a `$1.99` or an `@pomodoroflow:...` string in a component; add to this
+  file and import.
+- **Side concerns (streak, analytics, review prompts, tip jar, error
+  reporting)** — extend an existing service in `mobile-app/services/`
+  before adding a new one. Services are leaf-pure: they import only
+  `config/monetization.ts`, expo modules, and `services/ErrorReporter`.
+  Don't cross-import between services.
+- **Timer logic** — lives entirely in `mobile-app/App.js` by design.
+  Do not extract a `TimerService` — the single-file structure is
+  documented in `docs/architecture-one-pager.md` under "Why single-file"
+  and matches the app's philosophy ("Radical simplicity — 25/5 on loop").
+- **Error handling** — swallowed exceptions are invisible in prod. Any
+  `try/catch` that hides a failure should call
+  `ErrorReporter.captureException(err, { where: '...' })` so it lands in
+  Sentry with context.
+- **IAP flow** — `expo-iap` is event-driven, not promise-driven. The
+  Promise wrapper in `TipJarModal.handleTip` is the reference pattern:
+  set up both `purchaseUpdatedListener` and `purchaseErrorListener`
+  before calling `requestPurchase`, and `cleanup()` both on either
+  outcome. Consumables must call `finishTransaction({ isConsumable: true })`
+  after success or Android won't allow re-purchase.
+
+Don't add a new file for a one-off variant of an existing pattern. If
+you're about to copy-paste a file and tweak two values, extract a helper
+in the existing service or the config instead.

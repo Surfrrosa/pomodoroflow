@@ -15,11 +15,13 @@ Scan the QR code with Expo Go on your device.
 
 ### Tech Stack
 
-- **Framework:** Expo 54 + React Native 0.81
+- **Framework:** Expo 56 + React Native 0.85
 - **Language:** JavaScript
 - **Storage:** AsyncStorage
 - **Notifications:** Expo Notifications (local scheduling)
 - **Audio:** Expo AV
+- **IAP:** expo-iap (cross-platform tip jar)
+- **Error telemetry:** Sentry
 
 ## Landing Page
 

@@ -2,7 +2,7 @@
   "expo": {
     "name": "PomodoroFlow",
     "slug": "pomodoroflow",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -54,13 +54,16 @@
           }
         }
       ],
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "expo-asset",
+      "expo-font",
+      "expo-iap"
     ],
     "extra": {
       "eas": {
         "projectId": "7e0dc02e-4012-4d53-8765-06de09aed23e"
       },
-      "sentryDsn": ""
+      "sentryDsn": "https://ee3bc21d09dad08732cc6301eaa6bf24@o4510779208368128.ingest.us.sentry.io/4511877199888384"
     },
     "owner": "shainaep"
   }
