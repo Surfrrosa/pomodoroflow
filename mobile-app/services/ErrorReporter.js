@@ -2,12 +2,14 @@ import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 
 const dsn = Constants.expoConfig?.extra?.sentryDsn ?? '';
+const version = Constants.expoConfig?.version ?? 'unknown';
 let initialized = false;
 
 export function init() {
   if (__DEV__ || !dsn) return;
   Sentry.init({
     dsn,
+    release: `pomodoroflow@${version}`,
     enableAutoSessionTracking: true,
     tracesSampleRate: 0,
   });
