@@ -56,14 +56,14 @@ jest.mock('expo-av', () => ({
   }
 }));
 
-jest.mock('expo-in-app-purchases', () => ({
-  connectAsync: jest.fn(() => Promise.resolve()),
-  disconnectAsync: jest.fn(() => Promise.resolve()),
-  getProductsAsync: jest.fn(() => Promise.resolve({ results: [] })),
-  purchaseItemAsync: jest.fn(() => Promise.resolve()),
-  setPurchaseListener: jest.fn(),
-  finishTransactionAsync: jest.fn(() => Promise.resolve()),
-  IAPResponseCode: { OK: 0, USER_CANCELED: 1, ERROR: 2 },
+jest.mock('expo-iap', () => ({
+  initConnection: jest.fn(() => Promise.resolve()),
+  endConnection: jest.fn(() => Promise.resolve()),
+  fetchProducts: jest.fn(() => Promise.resolve([])),
+  requestPurchase: jest.fn(() => Promise.resolve(null)),
+  finishTransaction: jest.fn(() => Promise.resolve()),
+  purchaseUpdatedListener: jest.fn(() => ({ remove: jest.fn() })),
+  purchaseErrorListener: jest.fn(() => ({ remove: jest.fn() })),
 }));
 
 jest.mock('expo-store-review', () => ({

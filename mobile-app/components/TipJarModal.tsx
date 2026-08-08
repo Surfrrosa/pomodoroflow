@@ -1,12 +1,10 @@
 /**
  * TipJarModal - Empathetic donation prompt
- * Triggered at thoughtful moments when users have gotten value
  *
- * NOTE: iOS only in v1.0.3 due to Android billing library conflicts
- * Android support will be added in v1.0.4
+ * Cross-platform (iOS + Android) via expo-iap.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -17,15 +15,19 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import {
+  initConnection,
+  endConnection,
+  fetchProducts,
+  requestPurchase,
+  finishTransaction,
+  purchaseUpdatedListener,
+  purchaseErrorListener,
+  type Purchase,
+} from 'expo-iap';
 import TipJarService from '../services/TipJarService';
 import * as ErrorReporter from '../services/ErrorReporter';
 import { MONETIZATION_CONFIG } from '../config/monetization';
-
-// Conditional import - only load on iOS to avoid Android billing conflicts
-let InAppPurchases: any = null;
-if (Platform.OS === 'ios') {
-  InAppPurchases = require('expo-in-app-purchases');
-}
 
 interface TipJarModalProps {
   visible: boolean;
@@ -40,32 +42,54 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
 }) => {
   const [purchasing, setPurchasing] = useState(false);
 
-  // Don't render on Android in v1.0.3 (billing library conflict)
-  if (Platform.OS === 'android') {
-    return null;
-  }
+  useEffect(() => {
+    if (!visible) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await initConnection();
+      } catch (e) {
+        if (!cancelled) {
+          ErrorReporter.captureException(e as Error, {
+            where: 'iap.initConnection',
+          });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+      endConnection().catch((e) =>
+        ErrorReporter.captureException(e as Error, {
+          where: 'iap.endConnection',
+        })
+      );
+    };
+  }, [visible]);
 
   const getTipOptions = () => [
     {
-      id: Platform.OS === 'ios'
-        ? MONETIZATION_CONFIG.TIP_JAR_COFFEE_IOS
-        : MONETIZATION_CONFIG.TIP_JAR_COFFEE_ANDROID,
+      id:
+        Platform.OS === 'ios'
+          ? MONETIZATION_CONFIG.TIP_JAR_COFFEE_IOS
+          : MONETIZATION_CONFIG.TIP_JAR_COFFEE_ANDROID,
       amount: MONETIZATION_CONFIG.TIP_COFFEE_AMOUNT,
       label: 'Coffee',
       description: 'Small thanks',
     },
     {
-      id: Platform.OS === 'ios'
-        ? MONETIZATION_CONFIG.TIP_JAR_LUNCH_IOS
-        : MONETIZATION_CONFIG.TIP_JAR_LUNCH_ANDROID,
+      id:
+        Platform.OS === 'ios'
+          ? MONETIZATION_CONFIG.TIP_JAR_LUNCH_IOS
+          : MONETIZATION_CONFIG.TIP_JAR_LUNCH_ANDROID,
       amount: MONETIZATION_CONFIG.TIP_LUNCH_AMOUNT,
       label: 'Lunch',
       description: 'Big thanks',
     },
     {
-      id: Platform.OS === 'ios'
-        ? MONETIZATION_CONFIG.TIP_JAR_SUPPORTER_IOS
-        : MONETIZATION_CONFIG.TIP_JAR_SUPPORTER_ANDROID,
+      id:
+        Platform.OS === 'ios'
+          ? MONETIZATION_CONFIG.TIP_JAR_SUPPORTER_IOS
+          : MONETIZATION_CONFIG.TIP_JAR_SUPPORTER_ANDROID,
       amount: MONETIZATION_CONFIG.TIP_SUPPORTER_AMOUNT,
       label: 'Supporter',
       description: 'Huge thanks',
@@ -76,47 +100,83 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
     setPurchasing(true);
     const iapContext = { productId, amount, trigger, platform: Platform.OS };
     ErrorReporter.addBreadcrumb('Tip jar purchase started', 'iap', iapContext);
+
+    let purchase: Purchase | null = null;
     try {
-      ErrorReporter.addBreadcrumb('IAP connectAsync', 'iap');
-      await InAppPurchases.connectAsync();
+      purchase = await new Promise<Purchase>((resolve, reject) => {
+        const successSub = purchaseUpdatedListener((p) => {
+          cleanup();
+          resolve(p);
+        });
+        const errorSub = purchaseErrorListener((err) => {
+          cleanup();
+          reject(err);
+        });
+        const cleanup = () => {
+          successSub.remove();
+          errorSub.remove();
+        };
 
-      ErrorReporter.addBreadcrumb('IAP getProductsAsync', 'iap', { productId });
-      const { results } = await InAppPurchases.getProductsAsync([productId]);
-
-      if (!results || results.length === 0) {
-        throw new Error('Product not found');
-      }
-
-      ErrorReporter.addBreadcrumb('IAP purchaseItemAsync', 'iap', { productId });
-      await InAppPurchases.purchaseItemAsync(productId);
-
-      await TipJarService.recordDonation(amount, trigger);
-
-      Alert.alert(
-        '💚 Thank You!',
-        'Your support means the world. It helps keep this app ad-free and independent.',
-        [{ text: 'You\'re welcome!', onPress: onClose }]
-      );
-
-      await InAppPurchases.disconnectAsync();
+        ErrorReporter.addBreadcrumb('IAP fetchProducts', 'iap', { productId });
+        fetchProducts({ skus: [productId], type: 'in-app' })
+          .then((products) => {
+            if (!products || products.length === 0) {
+              throw new Error('Product not found');
+            }
+            ErrorReporter.addBreadcrumb('IAP requestPurchase', 'iap', {
+              productId,
+            });
+            return requestPurchase({
+              request: {
+                apple: { sku: productId },
+                google: { skus: [productId] },
+              },
+              type: 'in-app',
+            });
+          })
+          .catch((err) => {
+            cleanup();
+            reject(err);
+          });
+      });
     } catch (error: any) {
-      if (error.code === 'E_USER_CANCELLED') {
+      const code = error?.code;
+      const isCancel =
+        code === 'E_USER_CANCELLED' ||
+        code === 'user-cancelled' ||
+        code === 'USER_CANCELLED';
+      if (isCancel) {
         if (__DEV__) console.log('[TipJar] User cancelled purchase');
       } else {
         console.error('[TipJar] Purchase error:', error);
-        ErrorReporter.captureException(error, {
-          ...iapContext,
-          errorCode: error?.code,
-          errorMessage: error?.message,
-        });
+        ErrorReporter.captureException(
+          error instanceof Error ? error : new Error(String(error)),
+          { ...iapContext, errorCode: code, errorMessage: error?.message }
+        );
         Alert.alert(
           'Oops!',
-          'Something went wrong. No worries, you weren\'t charged.',
+          "Something went wrong. No worries, you weren't charged.",
           [{ text: 'OK' }]
         );
       }
+      setPurchasing(false);
+      return;
+    }
 
-      await InAppPurchases.disconnectAsync();
+    try {
+      ErrorReporter.addBreadcrumb('IAP finishTransaction', 'iap', { productId });
+      await finishTransaction({ purchase, isConsumable: true });
+      await TipJarService.recordDonation(amount, trigger);
+      Alert.alert(
+        'Thank you',
+        'Your support means the world. It helps keep this app ad-free and independent.',
+        [{ text: "You're welcome!", onPress: onClose }]
+      );
+    } catch (error: any) {
+      ErrorReporter.captureException(
+        error instanceof Error ? error : new Error(String(error)),
+        { ...iapContext, phase: 'finishTransaction' }
+      );
     } finally {
       setPurchasing(false);
     }
@@ -125,14 +185,6 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
   const handleDismiss = async () => {
     await TipJarService.recordDismissed(trigger);
     onClose();
-  };
-
-  const getTitle = () => {
-    return 'Thank you for using PomodoroFlow';
-  };
-
-  const getMessage = () => {
-    return 'This app is completely free and always will be. If PomodoroFlow has helped you stay focused, consider supporting our work. Every bit helps us keep building tools you love. No pressure. We\'re happy you\'re here :-)';
   };
 
   return (
@@ -144,8 +196,13 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.modal}>
-          <Text style={styles.title}>{getTitle()}</Text>
-          <Text style={styles.message}>{getMessage()}</Text>
+          <Text style={styles.title}>Thank you for using PomodoroFlow</Text>
+          <Text style={styles.message}>
+            This app is completely free and always will be. If PomodoroFlow has
+            helped you stay focused, consider supporting our work. Every bit
+            helps us keep building tools you love. No pressure. We&apos;re happy
+            you&apos;re here :-)
+          </Text>
 
           <View style={styles.tipOptions}>
             {getTipOptions().map((option) => (
@@ -154,6 +211,9 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
                 style={[styles.tipButton, purchasing && styles.buttonDisabled]}
                 onPress={() => handleTip(option.id, option.amount)}
                 disabled={purchasing}
+                accessibilityRole="button"
+                accessibilityLabel={`${option.label} tip — $${option.amount.toFixed(2)}`}
+                accessibilityState={{ disabled: purchasing }}
               >
                 <View style={styles.tipButtonContent}>
                   <View style={styles.tipButtonText}>
@@ -173,7 +233,12 @@ export const TipJarModal: React.FC<TipJarModalProps> = ({
             </View>
           )}
 
-          <Pressable style={styles.closeButton} onPress={handleDismiss}>
+          <Pressable
+            style={styles.closeButton}
+            onPress={handleDismiss}
+            accessibilityRole="button"
+            accessibilityLabel="Close tip jar"
+          >
             <Text style={styles.closeButtonText}>Not right now</Text>
           </Pressable>
 

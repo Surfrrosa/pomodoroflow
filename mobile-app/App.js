@@ -400,17 +400,15 @@ function AppContent() {
             {lifetimeSessions} session{lifetimeSessions === 1 ? '' : 's'} completed
           </Text>
         )}
-        {Platform.OS === 'ios' && (
-          <Pressable
-            onPress={() => setShowTipJar(true)}
-            style={styles.supportButton}
-            accessibilityRole="button"
-            accessibilityLabel="Support PomodoroFlow"
-          >
-            <Ionicons name="heart" size={16} color="#8B1A1A" style={styles.heartIcon} />
-            <Text style={styles.supportLink}>Support PomodoroFlow</Text>
-          </Pressable>
-        )}
+        <Pressable
+          onPress={() => setShowTipJar(true)}
+          style={styles.supportButton}
+          accessibilityRole="button"
+          accessibilityLabel="Support PomodoroFlow"
+        >
+          <Ionicons name="heart" size={16} color="#8B1A1A" style={styles.heartIcon} />
+          <Text style={styles.supportLink}>Support PomodoroFlow</Text>
+        </Pressable>
         <Text style={styles.tagline}>Radical simplicity — 25/5 on loop.</Text>
       </View>
 
