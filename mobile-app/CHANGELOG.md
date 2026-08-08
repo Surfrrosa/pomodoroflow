@@ -7,21 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [1.0.8] - 2026-08
 
 ### Added
-- **Error telemetry via Sentry.** Production-silent catches across the
-  IAP purchase flow, app initialization, notification scheduling,
-  streak service, and review-prompt service now report exceptions to
-  Sentry instead of disappearing. The tip jar purchase flow also emits
-  step-by-step breadcrumbs (connect / getProducts / purchaseItem) and
-  captures the StoreKit error code, so the next time anyone hits the
-  "Oops!" path we'll see what actually failed.
-- `services/ErrorReporter.js` wrapper — components and services never
-  import `@sentry/react-native` directly. Init is gated on `!__DEV__`
-  and an empty DSN is a no-op, so local dev console paths still work.
-- DSN is read from `app.json` `extra.sentryDsn`. Paste a real DSN
-  there before the next prod build to activate.
+- **Cross-platform tip jar.** Android users can now support the app for
+  the first time — the billing-library conflict that killed Android
+  IAP in v1.0.3 is resolved by the migration to `expo-iap`. Same three
+  tiers ($1.99 / $4.99 / $9.99), same trigger logic.
+- **Sentry error telemetry, versioned.** Silent catches across the IAP
+  flow, app initialization, notifications, streak service, and review
+  service now report to Sentry with breadcrumbs, StoreKit error codes,
+  and a `release: pomodoroflow@<version>` tag for per-version filtering.
+- **Screen reader improvements.** Primary controls (Start / Pause /
+  Resume / Stop), the Support button, and every tip-jar Pressable now
+  announce their role and label to VoiceOver/TalkBack.
+
+### Changed
+- **Expo SDK 54 → 56.** Meets Google Play's August 31, 2026 Android
+  API level 36 requirement (auto-applied by the SDK 56 config plugin).
+  React 19.1 → 19.2.3. React Native 0.81 → 0.85.3.
+  Closes the critical shell-quote CVE plus 9 other high-severity
+  dependency vulnerabilities (audit went from 28 → 14 remaining
+  moderates, all Expo SDK transitives).
+- **`expo-in-app-purchases` → `expo-iap`.** The old library was
+  deprecated (3 years since last release, removed from Expo's
+  recommended list). `expo-iap` is the OpenIAP-spec successor with
+  StoreKit 2 + Google Play Billing v6+ support.
+
+### Fixed
+- **Tip jar triggers weren't firing.** `TipJarService.checkTriggers`
+  used strict equality (`totalSessions === 25`), so users who blew
+  past 25 sessions without a check running would never see the prompt.
+  Changed to `>=` — existing power users get the prompt on their next
+  focus session.
+
+### Removed
+- Dead `baseUrl` + `@/*` path aliases from `tsconfig.json` (never used
+  anywhere; TS 6 deprecated the baseUrl-only style).
 
 ---
 
@@ -159,4 +181,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-**Last Updated:** v1.0.7
+**Last Updated:** v1.0.8
