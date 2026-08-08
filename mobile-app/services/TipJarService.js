@@ -198,17 +198,20 @@ class TipJarService {
    */
   async checkTriggers(totalSessions, daysSinceInstall) {
     try {
-      // Trigger #1: Power User (25 sessions)
-      if (totalSessions === this.CONFIG.POWER_USER_SESSIONS) {
+      // Trigger #1: Power User (25+ sessions)
+      // >= (not ===) so users who blow past the threshold without a
+      // check running still get the prompt on their next session.
+      // shouldShowTipJar's firedTriggers guard prevents re-firing.
+      if (totalSessions >= this.CONFIG.POWER_USER_SESSIONS) {
         const shouldShow = await this.shouldShowTipJar('power_user');
         if (shouldShow) {
           return { shouldShow: true, trigger: 'power_user' };
         }
       }
 
-      // Trigger #2: 30-day anniversary with 15+ sessions
+      // Trigger #2: 30+ day anniversary with 15+ sessions
       if (
-        daysSinceInstall === this.CONFIG.ANNIVERSARY_DAYS &&
+        daysSinceInstall >= this.CONFIG.ANNIVERSARY_DAYS &&
         totalSessions >= this.CONFIG.ANNIVERSARY_MIN_SESSIONS
       ) {
         const shouldShow = await this.shouldShowTipJar('anniversary');
