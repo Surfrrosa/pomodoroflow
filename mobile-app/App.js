@@ -1,7 +1,7 @@
 // mobile-app/App.js
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet, Switch, AppState, Platform, Modal, Alert } from "react-native";
-import { Audio } from "expo-av";
+import { createAudioPlayer } from "expo-audio";
 import * as Notifications from "expo-notifications";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -47,7 +47,7 @@ function AppContent() {
   const notificationIdRef = useRef(null);  // currently scheduled local notif id
   const lastScheduleKeyRef = useRef(null); // prevent duplicate scheduling
   const appState = useRef(AppState.currentState);
-  const soundRef = useRef(null);
+  const playerRef = useRef(null);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -130,18 +130,14 @@ function AppContent() {
   }, [durations]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        // Removed setAudioModeAsync to avoid UIBackgroundModes audio requirement (App Store Guideline 2.5.4)
-        // Sound will now respect device silent mode - this is acceptable for a pomodoro timer chime
-        const { sound } = await Audio.Sound.createAsync(require("./assets/chime.mp3"));
-        soundRef.current = sound;
-      } catch (e) {
-        if (__DEV__) console.warn("Chime not loaded. Add assets/chime.mp3", e?.message);
-        ErrorReporter.captureException(e, { where: 'loadChime' });
-      }
-    })();
-    return () => soundRef.current?.unloadAsync();
+    // Chime respects device silent mode (no UIBackgroundModes audio — App Store Guideline 2.5.4)
+    try {
+      playerRef.current = createAudioPlayer(require("./assets/chime.mp3"));
+    } catch (e) {
+      if (__DEV__) console.warn("Chime not loaded. Add assets/chime.mp3", e?.message);
+      ErrorReporter.captureException(e, { where: 'loadChime' });
+    }
+    return () => playerRef.current?.remove();
   }, []);
 
   useEffect(() => {
@@ -301,7 +297,10 @@ function AppContent() {
 
       const now = Date.now();
       if (now >= end) {
-        try { await soundRef.current?.replayAsync(); } catch {}
+        try {
+          playerRef.current?.seekTo(0);
+          playerRef.current?.play();
+        } catch {}
         try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
 
         // Track session completion
