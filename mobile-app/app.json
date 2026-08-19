@@ -57,7 +57,8 @@
       "@sentry/react-native",
       "expo-asset",
       "expo-font",
-      "expo-iap"
+      "expo-iap",
+      "expo-audio"
     ],
     "extra": {
       "eas": {

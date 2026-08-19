@@ -42,18 +42,13 @@ jest.mock('expo-haptics', () => ({
   },
 }));
 
-jest.mock('expo-av', () => ({
-  Audio: {
-    setAudioModeAsync: jest.fn(() => Promise.resolve()),
-    Sound: {
-      createAsync: jest.fn(() => Promise.resolve({
-        sound: {
-          replayAsync: jest.fn(() => Promise.resolve()),
-          unloadAsync: jest.fn(() => Promise.resolve()),
-        }
-      }))
-    }
-  }
+jest.mock('expo-audio', () => ({
+  createAudioPlayer: jest.fn(() => ({
+    play: jest.fn(),
+    pause: jest.fn(),
+    seekTo: jest.fn(),
+    remove: jest.fn(),
+  })),
 }));
 
 jest.mock('expo-iap', () => ({

@@ -16,9 +16,6 @@
       "ios": {
         "image": "latest"
       },
-      "android": {
-        "image": "latest"
-      },
       "env": {
         "NODE_ENV": "production",
         "SENTRY_ORG": "shaina-pauley",
