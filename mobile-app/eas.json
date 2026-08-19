@@ -13,8 +13,12 @@
     },
     "production": {
       "autoIncrement": true,
+      "image": "latest",
       "env": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "SENTRY_ORG": "shaina-pauley",
+        "SENTRY_PROJECT": "pomodoroflow",
+        "SENTRY_ALLOW_FAILURE": "true"
       }
     }
   },
