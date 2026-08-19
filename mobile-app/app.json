@@ -50,8 +50,7 @@
         "expo-build-properties",
         {
           "android": {
-            "enableProguardInReleaseBuilds": false,
-            "kotlinVersion": "2.4.10"
+            "enableProguardInReleaseBuilds": false
           }
         }
       ],
